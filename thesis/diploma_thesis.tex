@@ -1,0 +1,87 @@
+% Contributors:
+
+% Jan Stoess <stoess@ira.uka.de>
+% Simon Kellner <kellner@kit.edu>
+% Konrad Miller <miller@kit.edu>
+%
+\documentclass[12pt, a4paper]{book}
+\usepackage{graphicx}
+\usepackage{chngpage}
+\usepackage{xspace,ifthen,epsfig}
+\usepackage{cite}
+\usepackage{color}
+\usepackage{fancybox}
+%\usepackage{pdfpages}
+\usepackage{setspace}
+\usepackage{subfigure}
+\usepackage{longtable} 
+\usepackage{tabularx} 
+\usepackage{ltxtable} 
+\usepackage{times}
+\usepackage{url}
+\usepackage{listings}
+\usepackage{amsmath}
+\usepackage[american,ngerman]{babel}
+\usepackage[ansinew]{inputenc}
+\usepackage{fancyhdr}
+\usepackage{styles/kitthesiscover}
+\usepackage[%dvipdfm,
+   pdfauthor={Jan Stoess},
+   pdftitle={System Support for Distributed Energy Management in Modular Operating Systems},
+   pdfsubject={PhD Thesis},
+   pdfkeywords={Operating Systems, Microkernels, Energy Management, Component-Based Systems}
+]{hyperref}
+
+\bibliographystyle{styles/plain}
+
+%\raggedbottom
+\newcommand{\todo}[1]{{\texttt{[#1]}}}
+\newcommand{\code}[1]{{\tt \small{#1}}}
+\newcommand{\evenindent}[2]{\ifodd #1 \else \hspace*{#2} \fi}
+
+\begin{document}
+\frontmatter
+\unitlength1cm
+
+\selectlanguage{american}
+
+
+\input{diploma_thesis_title}
+
+\input{declaration}
+
+\chapter{Abstract}
+
+\chapter{Acknowledgments}
+
+\mainmatter
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{chapter}{Contents}
+\tableofcontents 
+
+\chapter{Introduction}
+\label{sec:intro}
+\cite{mach87ulvm}
+
+\chapter{Related Work}
+\label{sec:bgrelwork}
+
+\chapter{Design} 
+\label{sec:design}
+
+\chapter{Implementation}
+\label{sec:implementation}
+
+\chapter{Evaluation}
+\label{sec:evaluation}
+
+\chapter{Conclusion}
+\label{sec:conclusion}
+
+\backmatter    
+%\chapter{Bibliography}
+\phantomsection
+\addcontentsline{toc}{chapter}{Bibliography}
+\bibliography{diploma_thesis}
+\end{document}
