@@ -12,3 +12,4 @@ rev.tex.aux
 _region_.tex
 auto/
 *~
+/*.synctex.gz
