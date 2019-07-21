@@ -28,6 +28,7 @@
 \usepackage{libertinust1math}
 \usepackage[T1]{fontenc}
 \usepackage{styles/kitthesiscover}
+\usepackage[acronym,automake]{glossaries}
 \usepackage[%dvipdfm,
    pdfauthor={Yussuf Khalil},
    pdftitle={Analysis and Optimization of Dynamic Voltage and Frequency Scaling for AVX Workloads Using a Software-Based Reimplementation},
@@ -41,6 +42,8 @@
 \newcommand{\todo}[1]{{\texttt{[#1]}}}
 \newcommand{\code}[1]{{\tt \small{#1}}}
 \newcommand{\evenindent}[2]{\ifodd #1 \else \hspace*{#2} \fi}
+
+\input{glossary}
 
 \begin{document}
 \frontmatter
@@ -71,6 +74,11 @@
 
 \backmatter
 %\chapter{Bibliography}
+
+\phantomsection
+\addcontentsline{toc}{chapter}{Acronyms}
+\printglossaries
+
 \phantomsection
 \addcontentsline{toc}{chapter}{Bibliography}
 \bibliography{bachelor_thesis}
