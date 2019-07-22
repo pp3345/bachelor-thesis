@@ -8,7 +8,7 @@ Intel regularly publishes optimization manuals~\cite{inteloptimizationmanual} in
 \begin{itemize}
 	\item Level~0: only \enquote{simple} (i.e., scalar, \gls{SSE}, \gls{AVX1} or simple \gls{AVX2}) instructions are being executed; a core may run at its maximum turbo frequency. This is the default state.
 	\item Level~1: \gls{AVX2} floating-point, integer multiplication, integer \gls{FMA} or \gls{AVX-512} instructions except floating-point, integer multiplication and integer \gls{FMA} are being executed. The maximum frequency is lowered to a \gls{SKU}-specific value.
-	\item Level~2: \gls{AVX-512} floating-point, integer multiplication  or integer \gls{FMA} instructions are being executed. The maximum frequency is lowered to a \gls{SKU}-specific value that is further below the frequency of level~1.
+	\item Level~2: \gls{AVX-512} floating-point, integer multiplication  or integer \gls{FMA} instructions are being executed. The maximum frequency is lowered to a \gls{SKU}-specific value that is further below the frequency used in level~1.
 \end{itemize}
 
 Given these license levels, Intel states that it may take up to \SI{500}{\micro\second} until the new frequency is applied and about \SI{2}{\milli\second} until a core reverts to level~0 after executing the last \enquote{heavy} instruction. Before the frequency is lowered, a core operates at \enquote{a lower peak capability}, however, Intel does not further specify what that exactly means. Intel hints that the license decisions are not solely bound to the instruction types as given in the level descriptions, but rather depend on the mix of instructions executed within a certain time window.
