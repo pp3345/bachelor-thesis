@@ -5,10 +5,12 @@
 % Konrad Miller <miller@kit.edu>
 %
 \documentclass[12pt, a4paper]{book}
+\usepackage[utf8]{inputenc}
 \usepackage{graphicx}
 \usepackage{changepage}
 \usepackage{xspace,ifthen,epsfig}
-\usepackage{cite}
+\usepackage{csquotes}
+\usepackage[backend=biber,style=numeric,giveninits=true]{biblatex}
 \usepackage{color}
 \usepackage{fancybox}
 %\usepackage{pdfpages}
@@ -22,7 +24,6 @@
 \usepackage{listings}
 \usepackage{amsmath}
 \usepackage[american,ngerman]{babel}
-\usepackage[ansinew]{inputenc}
 \usepackage{fancyhdr}
 \usepackage{libertine}
 \usepackage{libertinust1math}
@@ -36,14 +37,13 @@
    pdfkeywords={Operating Systems, x86, AVX, DVFS}
 ]{hyperref}
 
-\bibliographystyle{styles/plain}
-
 %\raggedbottom
 \newcommand{\todo}[1]{{\texttt{[#1]}}}
 \newcommand{\code}[1]{{\tt \small{#1}}}
 \newcommand{\evenindent}[2]{\ifodd #1 \else \hspace*{#2} \fi}
 
 \input{glossary}
+\addbibresource{bachelor_thesis.bib}
 
 \begin{document}
 \frontmatter
@@ -81,5 +81,5 @@
 
 \phantomsection
 \addcontentsline{toc}{chapter}{Bibliography}
-\bibliography{bachelor_thesis}
+\printbibliography
 \end{document}
