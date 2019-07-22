@@ -17,9 +17,16 @@ In this chapter we will describe the design of a framework for analyzing the act
 
 \section{Methodology}
 
+\section{Design}
+
 Our analysis framework consists of a module for the Linux kernel as well as a user-space component which interact with each other and makes use of the \gls{PMU}, a unit commonly found in modern microprocessors that enables software to measure performance and bottlenecks on the hardware level. In the following sections, we will present the design and features of these components and describe how they contribute to our analysis purposes.
 
 \subsection{Performance Monitoring Unit (PMU)}
+Modern x86 \glspl{CPU} commonly feature a \gls{PMU} \cite{intelsdmsysprogguide} which exposes a set of \textit{performance counters}, which may be configured to count assertions of a large set of \textit{performance events}.
+
+Precisely, we use version~3 of the x86 \textit{Architectural Performance Monitoring} facility, which features three \textit{fixed counters} per logical core that count retired instructions, cycles during which the core is not in a halt state and \glsunset{TSC}\gls{TSC} cycles in unhalted state, respectively. The \glsreset{TSC}\gls{TSC} is a simple counter found in current x86 \glspl{CPU} that increments steadily with a fixed frequency, independent of the core clock, thus making it suitable for measuring wall-clock time. In addition to the fixed counters, eight freely configurable counters are available per physical core (four per logical core when \gls{SMT} is enabled). These counters may be set to count any of the performance events available for a specific microarchitecture, e.g., most architectures define events for cache hits/misses, execution stalls or load on specific execution units.
+
+Each counter is represented via a \gls{MSR} and also configured through one. More specifically, software may configure the event to count (non-fixed counters only) and when to count (e.g., in user mode (ring $\geq$ 1) and/or kernel mode (ring 0)). Additionally, the counter can be configured to trigger an interrupt when it overflows. By setting the counter to its maximum value less an offset, this can be used as a mechanism to generate notifications when a certain amount of events of a specific type has occurred. The interrupt vector used for delivery can be configured in the core's \gls{APIC}'s \gls{LVT}. Optionally, the \gls{PMU} may be instructed to freeze all counters at their current values as soon as an interrupt is triggered.
 
 \subsection{Kernel Component}
 
