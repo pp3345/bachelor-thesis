@@ -21,3 +21,5 @@ auto/
 *.glo
 *.gls
 *.ist
+*.bcf
+*.run.xml
