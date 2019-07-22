@@ -9,7 +9,7 @@
 \usepackage{graphicx}
 \usepackage{changepage}
 \usepackage{xspace,ifthen,epsfig}
-\usepackage{csquotes}
+\usepackage[autostyle]{csquotes}
 \usepackage[backend=biber,style=numeric,giveninits=true]{biblatex}
 \usepackage{color}
 \usepackage{fancybox}
@@ -35,7 +35,11 @@
    pdfsubject={Bachelor's Thesis},
    pdfkeywords={Operating Systems, x86, AVX, DVFS}
 ]{hyperref}
+\usepackage{cleveref}
+\usepackage{siunitx}
 \usepackage[acronym,automake]{glossaries}
+
+\setacronymstyle{long-sc-short-desc}
 
 %\raggedbottom
 \newcommand{\todo}[1]{{\texttt{[#1]}}}

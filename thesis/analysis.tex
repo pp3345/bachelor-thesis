@@ -1,2 +1,28 @@
 \chapter{Analysis}
 \label{sec:analysis}
+
+In order to be able to evaluate potential means of improving Intel's \gls{AVX} reclocking algorithm, we first need to obtain thorough knowledge of the algorithm as it is implemented in current Intel x86 \glspl{CPU}. We can then use this knowledge for the software-based reimplementation presented in \Cref{sec:design} and to understand the hardware-induced constraints Intel needs to keep within, which is in turn necessary for designing a feasible and implementable improved reclocking algorithm.
+
+Intel regularly publishes optimization manuals~\cite{inteloptimizationmanual} intended for compiler developers and software engineers which contain a vague description of the mechanism used for deciding when to lower or raise the processor's frequency upon execution of \gls{AVX} instructions. Precisely, Intel defines three \textit{turbo license levels}, which designate frequency offsets for different instruction mix scenarios:
+
+\begin{itemize}
+	\item Level~0: only \enquote{simple} (i.e., scalar, \gls{SSE}, \gls{AVX1} or simple \gls{AVX2}) instructions are being executed; a core may run at its maximum turbo frequency. This is the default state.
+	\item Level~1: \gls{AVX2} floating-point, integer multiplication, integer \gls{FMA} or \gls{AVX-512} instructions except floating-point, integer multiplication and integer \gls{FMA} are being executed. The maximum frequency is lowered to a \gls{SKU}-specific value.
+	\item Level~2: \gls{AVX-512} floating-point, integer multiplication  or integer \gls{FMA} instructions are being executed. The maximum frequency is lowered to a \gls{SKU}-specific value that is further below the frequency of level~1.
+\end{itemize}
+
+Given these license levels, Intel states that it may take up to \SI{500}{\micro\second} until the new frequency is applied and about \SI{2}{\milli\second} until a core reverts to level~0 after executing the last \enquote{heavy} instruction. Before the frequency is lowered, a core operates at \enquote{a lower peak capability}, however, Intel does not further specify what that exactly means. Intel hints that the license decisions are not solely bound to the instruction types as given in the level descriptions, but rather depend on the mix of instructions executed within a certain time window.
+
+In this chapter we will describe the design of a framework for analyzing the actual behavior of an x86 processor during the execution of \gls{AVX} instructions. Afterwards, we will present and evaluate the results generated when executed on a system equipped with a modern Intel \gls{CPU}. Finally, we compare our findings to what Intel maintains in their specification and point out the differences.
+
+\section{Methodology}
+
+Our analysis framework consists of a module for the Linux kernel as well as a user-space component which interact with each other and makes use of the \gls{PMU}, a unit commonly found in modern microprocessors that enables software to measure performance and bottlenecks on the hardware level. In the following sections, we will present the design and features of these components and describe how they contribute to our analysis purposes.
+
+\subsection{Performance Monitoring Unit (PMU)}
+
+\subsection{Kernel Component}
+
+\subsection{User-Space Component}
+
+\subsection{Execution Modes}

@@ -1,3 +1,14 @@
 \makeglossaries
 
-\newacronym{AVX}{AVX}{Advanced Vector Extensions}
+\newacronym[description={An instruction set extension for x86 \glspl{CPU} which adds complex \glspl{vectorinst}}]{AVX}{AVX}{Advanced Vector Extensions}
+\newacronym[description={The main execution unit of a computer}]{CPU}{CPU}{Central Processing Unit}\glsunset{CPU}
+\newacronym[description={An instruction that multiplies two values and adds (or subtracts) a third one, i.e., $a*b+c$}]{FMA}{FMA}{Fused Multiply-Add}
+\newacronym[description={A specific processor product brought to market}]{SKU}{SKU}{Stock-Keeping Unit}\glsunset{SKU}
+\newacronym[description={A set of early \gls{vectorinst} sets for the x86 architecture, which are still commonly supported by modern \glspl{CPU} but do not require frequency reduction for stable execution}]{SSE}{SSE}{Streaming \gls{SIMD} Extensions}\glsunset{SSE}
+\newacronym[description={See \gls{vectorinst}}]{SIMD}{SIMD}{Single Instruction, Multiple Data}
+\newacronym[description={A unit found in many modern microprocessors that enables software to measure performance and bottlenecks on the hardware level.}]{PMU}{PMU}{Performance Monitoring Unit}
+
+\newglossaryentry{AVX1}{name={AVX1},description={The initial version of \gls{AVX}}}
+\newglossaryentry{AVX2}{name={AVX2},description={\gls{AVX} version 2, which added new instructions and 256 bit-wide vectors}}
+\newglossaryentry{AVX-512}{name={AVX-512},description={The third iteration of the \gls{AVX} instruction set with support for 512 bit-wide vectors}}
+\newglossaryentry{vectorinst}{name={vector instruction},description={A vector instruction is an instruction for a microprocessor which executes an operation not on only just one value, but on a vector consisting of several values}}
