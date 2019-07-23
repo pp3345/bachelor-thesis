@@ -13,9 +13,21 @@ Intel regularly publishes optimization manuals~\cite{inteloptimizationmanual} in
 
 Here, \enquote{heavy} instructions are defined to be floating-point, integer multiplication or integer \gls{FMA} operations. Given these license levels, Intel states that it may take up to \SI{500}{\micro\second} until the new frequency is applied and about \SI{2}{\milli\second} until a core reverts to level~0 after executing the last \enquote{heavy} instruction. Before the frequency is lowered, a core operates at \enquote{a lower peak capability}, however, Intel does not further specify what that exactly means. Intel hints that the license decisions are not solely bound to the instruction types as given in the level descriptions, but rather depend on the mix of instructions executed within a certain time window.
 
-In this chapter we will describe the design of a framework for analyzing the actual behavior of an x86 processor during the execution of \gls{AVX} instructions. Afterwards, we will present and evaluate the results generated when executed on a system equipped with a modern Intel \gls{CPU}. Finally, we compare our findings to what Intel maintains in their specification and point out the differences.
+In this chapter we will describe the design of a framework that allows us to analyze the actual behavior of an x86 processor during the execution of \gls{AVX} instructions. Afterwards, we will present and evaluate the results generated when executed on a system equipped with a modern Intel \gls{CPU}. Finally, we compare our findings to what Intel maintains in their specification and point out deviations of the timings between the actual behavior and their claims.
 
 \section{Methodology}
+
+For our reimplementation, our goal is to create a model of the reclocking behavior of an \gls{AVX-512}-capable \gls{CPU} that is as complete as possible and reflects the decisions made by the hardware with high accuracy. Therefore, by conducting this analysis, we want to answer the following aspects:
+
+\begin{itemize}
+	\item When exactly does a \gls{CPU} core decide to reduce or raise it's frequency during and after \gls{AVX} execution?
+	\item How much time do turbo license level switches need?
+	\item Do the \glspl{CPU} switch directly from level 0 to level 2 in case of heavy \gls{AVX-512} instructions or is there a step to level 1 in between?
+	\item What does Intel mean by \enquote{lower peak capability} while lowering the clock?
+	\item How complete is Intel's description of the reclocking algorithm?
+\end{itemize}
+
+In order to create a precise model we want to analyze these questions in different scenarios, i.e., for different instruction types, for different global load situations as well as with and without enabled turbo frequencies. To reach our goal, we run our analysis framework with synthetic code snippets that are designed to trigger the behavior to be analyzed.
 
 \section{Design}
 
