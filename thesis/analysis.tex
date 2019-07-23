@@ -16,6 +16,7 @@ Here, \enquote{heavy} instructions are defined to be floating-point, integer mul
 In this chapter we will describe the design of a framework that allows us to analyze the actual behavior of an x86 processor during the execution of \gls{AVX} instructions. Afterwards, we will present and evaluate the results generated when executed on a system equipped with a modern Intel \gls{CPU}. Finally, we compare our findings to what Intel maintains in their specification and point out deviations of the timings between the actual behavior and their claims.
 
 \section{Methodology}
+\label{sec:analysis:methodology}
 
 For our reimplementation, our goal is to create a model of the reclocking behavior of an \gls{AVX-512}-capable \gls{CPU} that is as complete as possible and reflects the decisions made by the hardware with high accuracy. Therefore, by conducting this analysis, we want to answer the following aspects:
 
@@ -30,10 +31,12 @@ For our reimplementation, our goal is to create a model of the reclocking behavi
 In order to create a precise model we want to analyze these questions in different scenarios, i.e., for different instruction types, for different global load situations as well as with and without enabled turbo frequencies. To reach our goal, we run our analysis framework with synthetic code snippets that are designed to trigger the behavior to be analyzed.
 
 \section{Design}
+\label{sec:analysis:design}
 
 Our analysis framework consists of a module for the Linux kernel as well as a user-space component which interact with each other and make use of the \gls{PMU}, a unit commonly found in modern microprocessors that enables software to measure performance and bottlenecks on the hardware level. In the following sections, we will present the design and features of these components and describe how they contribute to our analysis purposes.
 
 \subsection{Performance Monitoring Unit (PMU)}
+\label{sec:analysis:design:pmu}
 Modern x86 \glspl{CPU} commonly feature a \gls{PMU} \cite{intelsdmsysprogguide} which exposes a set of \textit{performance counters} that may be configured to count assertions of a large set of \textit{performance events}.
 
 Precisely, we use version~3 of the x86 \textit{Architectural Performance Monitoring} facility, which features three \textit{fixed counters} per logical core that count retired instructions, cycles during which the core is not in a halt state and \glsunset{TSC}\gls{TSC} cycles in unhalted state, respectively. The \glsreset{TSC}\gls{TSC} is a simple counter found in current x86 \glspl{CPU} that increments steadily with a fixed frequency, independent of the core clock, thus making it suitable for measuring wall-clock time. In addition to the fixed counters, eight freely configurable counters are available per physical core (four per logical core when \gls{SMT} is enabled). These counters may be set to count any of the performance events available for a specific microarchitecture, e.g., most architectures define events for cache hits/misses, execution stalls or load on specific execution units.
@@ -41,7 +44,10 @@ Precisely, we use version~3 of the x86 \textit{Architectural Performance Monitor
 Each counter is represented via a \gls{MSR} and also configured through one. More specifically, software may configure the event to count (non-fixed counters only) and when to count (e.g., in user mode (ring~$\geq$~1) and/or kernel mode (ring~0)). Additionally, the counter can be configured to trigger an interrupt when it overflows. By setting the counter to its maximum value less an offset, this can be used as a mechanism to generate notifications when a certain amount of events of a specific type has occurred. The interrupt vector used for delivery can be configured in the core's \gls{APIC}'s \gls{LVT}. Optionally, the \gls{PMU} may be instructed to freeze all counters at their current values as soon as an interrupt is triggered.
 
 \subsection{Kernel Component}
+\label{sec:analysis:design:kernel}
 
 \subsection{User-Space Component}
+\label{sec:analysis:design:userspace}
 
 \subsection{Execution Modes}
+\label{sec:analysis:design:executionmodes}
