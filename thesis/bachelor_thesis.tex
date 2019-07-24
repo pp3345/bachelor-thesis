@@ -39,13 +39,42 @@
 \usepackage{cleveref}
 \usepackage[binary-units=true]{siunitx}
 \usepackage[automake]{glossaries}
+\usepackage{pgfplots}
+\usepackage{tikz}
+\usetikzlibrary{decorations.pathreplacing,shapes,positioning}
+\usepackage{marvosym}
 
 \setacronymstyle{long-sc-short-desc}
+
+\definecolor{kitgreenexcl}{cmyk}{1.0,  0.0,  0.6, 0.0}
+\definecolor{kitblue}     {cmyk}{0.8,  0.5,  0.0, 0.0}
+\definecolor{kitgreen}    {cmyk}{0.6,  0.0,  1.0, 0.0}
+\definecolor{kityellow}   {cmyk}{0.0,  0.05, 1.0, 0.0}
+\definecolor{kitorange}   {cmyk}{0.0,  0.45, 1.0, 0.0}
+\definecolor{kitbrown}    {cmyk}{0.35, 0.5,  1.0, 0.0}
+\definecolor{kitred}      {cmyk}{0.25, 1.0,  1.0, 0.0}
+\definecolor{kitpurple}   {cmyk}{0.25, 1.0,  0.0, 0.0}
+\definecolor{kitcyan}     {cmyk}{0.9,  0.05, 0.0, 0.0}
+\definecolor{kitgrey}	  {cmyk}{0.0,  0.0,  0.0, 0.15}
+\definecolor{kitdarkgrey} {cmyk}{0.0,  0.0,  0.0, 0.5}
 
 %\raggedbottom
 \newcommand{\todo}[1]{{\texttt{[#1]}}}
 \newcommand{\code}[1]{{\tt \small{#1}}}
 \newcommand{\evenindent}[2]{\ifodd #1 \else \hspace*{#2} \fi}
+
+% https://tex.stackexchange.com/a/47797
+\tikzset{ref/.style={insert path={%
+			coordinate [pos=0,xshift=-0.5\pgflinewidth,yshift=-0.5\pgflinewidth] (#1 south west)
+			coordinate [pos=1,xshift=0.5\pgflinewidth,yshift=0.5\pgflinewidth]   (#1 north east)
+			coordinate [pos=.5] (#1 center)
+			(#1 south west |- #1 north east)     coordinate (#1 north west)
+			(#1 center     |- #1 north east)     coordinate (#1 north)
+			(#1 center     |- #1 south west)     coordinate (#1 south)
+			(#1 south west -| #1 north east)     coordinate (#1 south east)
+			(#1 center     -| #1 south west)     coordinate (#1 west)
+			(#1 center     -| #1 north east)     coordinate (#1 east)
+}}}
 
 \input{glossary}
 \addbibresource{bachelor_thesis.bib}
