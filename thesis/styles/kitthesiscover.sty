@@ -1,13 +1,12 @@
 \ProvidesPackage{kitthesiscover}[2010/11/11 thesis cover for KIT]
 \RequirePackage[T1]{fontenc}
-\renewcommand*{\sfdefault}{phv}
 
 \def\ktc@kitdesc{KIT -- Die Forschungsuniversit{\"a}t in der Helmholtz-Gemeinschaft}
-\def\ktc@coverfont{\fontsize{14}{14}\selectfont}
-\def\ktc@titlefont{\fontsize{28}{28}\selectfont}
-\def\ktc@authorfont{\fontsize{22}{22}\selectfont}
-\def\ktc@descfont{\fontsize{6}{6}\selectfont}
-\def\ktc@urlfont{\fontsize{15}{15}\selectfont}
+\def\ktc@coverfont{\fontfamily{phv}\fontsize{14}{14}\selectfont}
+\def\ktc@titlefont{\fontfamily{phv}\fontsize{28}{28}\selectfont}
+\def\ktc@authorfont{\fontfamily{phv}\fontsize{22}{22}\selectfont}
+\def\ktc@descfont{\fontfamily{phv}\fontsize{6}{6}\selectfont}
+\def\ktc@urlfont{\fontfamily{phv}\fontsize{15}{15}\selectfont}
 
 \def\ktc@thesistype{%
   \@latex@warning{No thesis type given! Use \protect\thesistype before %
