@@ -12,8 +12,11 @@
 \newacronym[description={A special register, usually for configuration or measurement purposes, that isn't defined by the instruction set architecture but is specific to a microarchitecture or \gls{SKU}}]{MSR}{MSR}{Model-Specific Register}
 \newacronym[description={One of the interrupt controllers found in modern x86 \glspl{CPU}}]{APIC}{APIC}{Advanced Programmable Interrupt Controller}\glsunset{APIC}
 \newacronym[description={An \gls{APIC}'s LVT stores the interrupt vectors to use for certain purposes}]{LVT}{LVT}{Local Vector Table}
+\newacronym[description={The instruction pointer of a thread contains the memory address of the instruction that is currently being executed}]{instptr}{IP}{instruction pointer}
 
 \newglossaryentry{AVX1}{name={AVX1},description={The initial version of \gls{AVX}}}
 \newglossaryentry{AVX2}{name={AVX2},description={\gls{AVX} version 2, which added new instructions and \SI{256}{\bit}-wide vectors}}
 \newglossaryentry{AVX-512}{name={AVX-512},description={The third iteration of the \gls{AVX} instruction set with support for \SI{512}{\bit}-wide vectors}}
 \newglossaryentry{vectorinst}{name={vector instruction},description={A vector instruction is an instruction for a microprocessor which executes an operation not on only just one value, but on a vector consisting of several values}}
+\newglossaryentry{libc}{name={libc},description={libc is the name of the standard library of the C programming language}}
+\newglossaryentry{UNIXsig}{name={UNIX signal},description={Signals defined by the UNIX operation system specification that may be sent to a process either by another process or by the kernel itself. Most signals terminate a process by default, unless the process opted to use custom handling}}

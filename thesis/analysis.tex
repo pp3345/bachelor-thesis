@@ -96,6 +96,26 @@ As depicted in a simplified way in \Cref{fig:analysis:design:overview}, the user
 \subsection{Kernel Component}
 \label{sec:analysis:design:kernel}
 
+Our kernel component is not supposed to conduct any analysis tasks by itself, but is designed to aid the user-space component described later in \Cref{sec:analysis:design:userspace}. We chose to implement it as a module for version~5.1 of the Linux kernel, which implies that it is written in the C programming language. Existence and design of this kernel module are driven by our user-space component's needs to configure the \gls{PMU} in order to conduct the measurements required for our analysis. This can only be done from kernel-space.
+
+During module startup, the \gls{PMU} is reset to a default state and the performance counter overflow interrupt vector is set in all core's \gls{APIC}'s \glspl{LVT}. Notably, this degrades the functionality of Linux's \texttt{perf} subsystem as parts of it rely on using the \gls{PMU}.
+
+The module interfaces with user-space by defining a device class and then providing a virtual character device of the previously defined class, exposed via \texttt{/dev/reclocking\_analysis} in the virtual file system. User-space may then \texttt{open()} the provided device file and interact with the module by using several offered \texttt{ioctl()} calls.
+
+Execution threads, on the one hand, initiate their execution by using the \texttt{SETUP ioctl()} call. A C \texttt{struct} must be passed that contains a set of \glspl{MSR} to be written by the kernel module -- these are used to configure the \gls{PMU}. Apart from that, a value for the \gls{instptr} may be passed that will be set in the thread's context before returning to user-space, thus, the thread will not directly return at the previous position in the \gls{libc}'s \texttt{ioctl()} wrapper but rather be redirected to another location in memory (this is used to directly jump into \gls{AVX} code). Optionally, the \texttt{r12}~x86 architectural register may also be set so that the code executed in user-space upon returning is able to access data structures in an easy manner without needing to use the stack. After applying the configuration, the \texttt{ioctl()} handler saves the current \gls{TSC} value and returns to user-space.
+
+Wait threads, one the other hand, start with the \texttt{WAIT\_FOR\_INTERRUPT ioctl()}, which takes a pointer to a \texttt{interrupt\_result} structure in the user-space component where the resulting performance counter values shall be stored later as well as the numeric identifier of a \gls{CPU} core where an interrupt is expected to occur. The calling thread is suspended by setting it into \texttt{TASK\_UNINTERRUPTIBLE} state. This state in Linux's task state machine allows a thread to be waked only by the kernel itself and not via any user-space mechanisms (e.g., \glspl{UNIXsig}). Consequently, this way we ensure the execution flow is not interrupted unexpectedly.
+
+It is expected that all execution threads that have a corresponding wait thread trigger a performance counter overflow interrupt some time after setup. The interrupt handler will then proceed with one of multiple actions as instructed by the \texttt{SETUP} call:
+
+\begin{itemize}
+	\item \texttt{WAKE\_WAIT\_THREAD}: this action reads all performance counters and writes them along with the current \gls{TSC} value and the recorded \gls{TSC} value at \texttt{SETUP} to the \texttt{interrupt\_result} structure of the corresponding wake wait, which is now waked up from suspension. The execution thread that triggered the interrupt is returned to its previous \acrlong{instptr} (before the \texttt{SETUP} call). Notably, from user-space's view, the \texttt{SETUP} call returns only now.
+	\item \texttt{SET\_MSRS}: this is used for analysis tasks consisting of several consecutive steps. The \gls{TSC} value is recorded and another set of \glspl{MSR} is configured on the thread's core.
+	\item \texttt{GOTO}: exactly like \texttt{SET\_MSRS}, but also sets a new \acrlong{instptr} on the execution thread.
+\end{itemize}
+
+Finally, the \gls{PMU}'s overflow bit and the \gls{APIC}'s state are reset in order to be ready for further interrupts.
+
 \subsection{User-Space Component}
 \label{sec:analysis:design:userspace}
 
