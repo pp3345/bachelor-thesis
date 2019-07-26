@@ -118,8 +118,6 @@ Each of these actions concludes with resetting the \gls{PMU}'s overflow bit and 
 
 A practical software engineering issue arises from the fact that wait threads are suspended in an uninterruptible state after startup: they may easily get stuck due to programming errors that cause a lack of interrupts. For these cases, a third \texttt{ioctl()} call was implemented: \texttt{RESET\_WAIT\_THREADS}, which simply wakes all suspended wait threads and makes their pending \texttt{ioctl()} calls return with an error status.
 
-% TODO swap last two paragraphs?
-
 \subsection{User-Space Component}
 \label{sec:analysis:design:userspace}
 
