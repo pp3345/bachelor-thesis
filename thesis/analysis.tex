@@ -85,7 +85,7 @@ As depicted in a simplified way in \Cref{fig:analysis:design:overview}, the user
 		\node[align=center] at ([yshift=-2.5cm,xshift=-\quartercomponentrectwidth cm] user-rect north) {4. Execute \\ AVX};
 		\node[color=kityellow] at ([yshift=-3.12cm,xshift=-1cm] kernel-rect north) {\Huge\Lightning};
 		\node at ([yshift=-3.1cm] kernel-rect north) {5. Interrupt};
-		\draw ([yshift=-3.75cm,xshift=-\arrowoverlength cm] kernel-rect north east) -- ++(\arrowlength,0) node[align=center,pos=.5,above=0] {6. PMU values};
+		\draw ([yshift=-3.75cm,xshift=\arrowoverlength cm] user-rect north west) -- ++(-\arrowlength,0) node[align=center,pos=.5,above=0] {6. PMU values};
 		\draw[->] ([yshift=-3.75cm,xshift=\arrowoverlength cm] user-rect north west) -- ++(\halfcomponentrectwidth,0);
 		\node[align=center] at ([yshift=-4.25cm,xshift=\quartercomponentrectwidth cm] user-rect north) {7. Process \\ results};
 	\end{tikzpicture}
