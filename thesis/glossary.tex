@@ -13,6 +13,9 @@
 \newacronym[description={One of the interrupt controllers found in modern x86 \glspl{CPU}}]{APIC}{APIC}{Advanced Programmable Interrupt Controller}\glsunset{APIC}
 \newacronym[description={An \gls{APIC}'s LVT stores the interrupt vectors to use for certain purposes}]{LVT}{LVT}{Local Vector Table}
 \newacronym[description={The instruction pointer of a thread contains the memory address of the instruction that is currently being executed}]{instptr}{IP}{instruction pointer}
+\newacronym[description={The standard file format for executable binary files commonly used by many UNIX systems, including Linux}]{ELF}{ELF}{Executable and Linkable Format}\glsunset{ELF}
+\newacronym[description={The default scheduler used in current Linux kernels. Designed to offer both low latency for interactive systems and high throughput for servers}]{CFS}{CFS}{Completely Fair Scheduler}
+\newacronym[description={A processor featuring an out-of-order pipeline is capable of executing instructions in a different order than given in the program while maintaining correct and consistent results in order to speed up execution}]{OoO}{OoO}{out-of-order}
 
 \newglossaryentry{AVX1}{name={AVX1},description={The initial version of \gls{AVX}}}
 \newglossaryentry{AVX2}{name={AVX2},description={\gls{AVX} version 2, which added new instructions and \SI{256}{\bit}-wide vectors}}
@@ -20,3 +23,7 @@
 \newglossaryentry{vectorinst}{name={vector instruction},description={A vector instruction is an instruction for a microprocessor which executes an operation not on only just one value, but on a vector consisting of several values}}
 \newglossaryentry{libc}{name={libc},description={libc is the name of the standard library of the C programming language}}
 \newglossaryentry{UNIXsig}{name={UNIX signal},description={Signals defined by the UNIX operation system specification that may be sent to a process either by another process or by the kernel itself. Most signals terminate a process by default, unless the process opted to use custom handling}}
+\newglossaryentry{instprefetcher}{name={instruction prefetcher},description={A unit in a microprocessor that predictively loads instructions from system memory before they are executed in order to prevent pipeline stalls}}
+\newglossaryentry{L3}{name={L3 cache},description={Level 3 cache, usually the last cache in the hierarchy on most modern \glspl{CPU}. Typically several Megabytes large and shared between all cores}}
+\newglossaryentry{macroinst}{name={macro-instruction},description={A macro-instruction is an instruction as defined by the instruction set architecture and may be split up into several \glspl{microinst} for execution by a specific implementation (i.e., a processor)}}
+\newglossaryentry{microinst}{name={micro-instruction},description={Micro-instructions are the instructions passed into the execution engine of a processor after being split up from the \glspl{macroinst} that make up the program that is being executed}}
