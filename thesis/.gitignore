@@ -23,3 +23,5 @@ auto/
 *.ist
 *.bcf
 *.run.xml
+_minted*
+*.txss
