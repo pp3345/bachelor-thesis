@@ -126,7 +126,7 @@ The user-space component of our analysis framework is, akin to our kernel module
 In order to run tests with different instruction types, an arbitrary number of \gls{ELF} sections containing \gls{AVX} instructions may be included in the component's compiled binary executable. Address within the binary and length of one of these sections must be passed as arguments to the program (these values are easily obtainable using tools like \texttt{objdump}). On startup, one or more (as required by the selected measurement mode) executable memory areas, each consisting of four pages, are mapped and filled with the content of the passed section, repeated until the area is full, or alternatively, again depending on the measurement mode, filled only with a specific amount of repeated instructions. In order to ensure the instruction flow does not run outside the allocated area, one of two different loop modes is used at the end of each memory area, depending on the measurement mode:
 
 \begin{itemize}
-	\item \texttt{LOOP\_AVX}: a jump instruction to the beginning of the area is added in order to make complete constructed code loop.
+	\item \texttt{LOOP\_AVX}: a jump instruction to the beginning of the area is added in order to make the constructed code loop.
 	\item \texttt{LOOP\_R12\_CMP}: a spinlock-style loop is inserted that constantly compares the value referenced by the pointer stored in the \texttt{r12} register to $0$ and returns as soon as it isn't equal to $0$ anymore:
 		\begin{minted}{gas}
 		loop:
