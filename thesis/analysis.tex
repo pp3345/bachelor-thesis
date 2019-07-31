@@ -199,3 +199,17 @@ In case level 1 is targeted, all (non-pre-throttling) execution threads directly
 While the execution threads are running, our main thread awaits a \SI{1}{\milli\second} delay and then checks whether an interrupt was triggered on all expected cores. If yes, the test run has completed and the program quits. Otherwise, we exit all execution threads by setting \texttt{try\_elapsed} and then remap the \texttt{LOOP\_R12\_CMP} with one more copy of the \gls{AVX} code than in the previous iteration. Wait threads that completed because an interrupt was triggered on their corresponding execution thread are respawned, afterwards we reset \texttt{try\_elapsed} and start the execution threads again. Unlike in the first iteration, where execution threads generally spin for \SI{150}{\milli\second} to ramp up the core frequency (as described in \Cref{sec:analysis:design:userspace}), we only have them spin for \SI{3}{\milli\second} now as their respective cores are already running at the desired frequency but possibly need to return from an attained turbo license level. This procedure repeats until we have enough \gls{AVX} code in our mapped area to trigger interrupts on all desired cores.
 
 At the end, the number of copies of the \gls{AVX} code in the \texttt{LOOP\_R12\_CMP} area reflects the amount of instructions needed to cause the frequency transition.
+
+\section{Results}
+
+We use the described analysis framework to conduct measurements with several different \gls{AVX} instructions using all available combinations of modes, i.e., with and without pre-throttling, different target turbo license levels, with turbo frequencies enabled and disabled and with all possible amounts of cores enabled. In this section, we present our system setup, describe the precise instructions we used for testing and present as well as discuss the results.
+
+\subsection{System Setup}
+
+To execute our analysis tasks, we used an Intel Core i9-7940X processor which features 14 physical cores with twofold \gls{SMT} running at a nominal base frequency of \SI{3.1}{\giga\hertz} with a maximum turbo frequency of \SI{4.3}{\giga\hertz} \cite{intel7940x}. Additionally, the chip supports \textit{Intel Turbo Boost Max Technology 3.0}, essentially meaning that two cores may operate at a higher turbo frequency, namely \SI{4.4}{\giga\hertz}. These cores are selected based on their electrical and thermal properties during the manufacturing process \cite{intelxeonscalabledeepdive} -- this technique is otherwise also known as \textit{speed binning} \cite{lopata2012speed}. The chip's nominal \gls{TDP} is specified at \SI{165}{\watt}, and as such, this is the maximum power consumption the chip will sustain over long time periods.
+
+This \gls{CPU} is based on the \textit{Skylake (Server)} microarchitecture, the first x86 implementation featuring support for the \gls{AVX-512} extension \cite{intelxeonscalabledeepdive}, making it one of the oldest processors that expose the \gls{AVX} reclocking issue for heterogeneous workloads.
+
+The processor was equipped on an ASUS X299 MARK 2 motherboard along with \SI{32}{\gibi\byte} of DDR4 system memory operating a frequency of \SI{2666}{\mega\hertz} and a NVMe Solid State Drive.
+
+We opted to use Fedora 29 (Server Edition) as operating system with a custom-built Linux 5.1.0 kernel and glibc version 2.28-33. The kernel and all of our own code were compiled using GCC 8.3.1-2 with the default \texttt{-O2} optimization level.
