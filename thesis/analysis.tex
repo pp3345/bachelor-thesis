@@ -215,3 +215,79 @@ The processor was equipped on an ASUS TUF X299 MARK 2 motherboard along with \SI
 We opted to use Fedora 29 (Server Edition) as operating system with a custom-built Linux 5.1.0 kernel and glibc version 2.28-33. The kernel and all of our own code were compiled using GCC 8.3.1-2 with the default \texttt{-O2} optimization level.
 
 In order to minimize overhead and latencies caused by context switches from user-space to kernel-space and vice versa, we disabled all mitigations provided by the Linux kernel for hardware vulnerabilities found in recent \glspl{CPU} (e.g., \textsc{Spectre} and \textsc{Meltdown}) as well as \gls{KASLR}.
+
+\subsection{Tested Instructions}
+
+In order to create a precise model of the \gls{AVX} reclocking algorithm as it was implemented by Intel, we want to conduct our measurements with different kinds of \gls{AVX} instructions to find possible differences in the behavior. Note that we only tested homogeneous loads and did not run any tests with heterogeneous mixtures of different instruction classes. This remains as future work.
+
+We tried to select both floating-point and integer operations that reflect the \enquote{heavy} and \enquote{light} instruction types as defined in Intel's optimization manual \cite{inteloptimizationmanual} as well as instructions we guess to be implemented differently in the hardware's execution units. Consequently, we chose the following subset of \gls{AVX} instructions for our measurements (as obtained from Intel's manual for software developers \cite{intelsdminstructionreference}):
+
+\begin{itemize}
+	\item \texttt{vfmaddsub132pd} (double-precision) and \texttt{vfmaddsub132ps} (single-precision): these are floating-point \gls{FMA} instructions that alternatingly add and subtract the values from a third vector after multiplying the values from two other vectors. I.e., for input vectors $a$, $b$ and $c$, they calculate the result vector $r$ according to the following rule:
+	\begin{displaymath}
+		\begin{pmatrix}
+		r_1 \\
+		r_2 \\
+		r_3 \\
+		\dots
+		\end{pmatrix}
+		\coloneqq
+		\begin{pmatrix}
+		a_1 * b_1 + c_1 \\
+		a_2 * b_2 - c_2 \\
+		a_3 * b_3 + c_3 \\
+		\dots
+		\end{pmatrix}
+	\end{displaymath}
+	\item \texttt{vmulpd} (double-precision) and \texttt{vmulps} (single-precision): those instructions simply calculate the products of all corresponding floating-point members from two input vectors.
+	\item \texttt{vpmullq}: multiplies corresponding \SI{64}{\bit} integers from two input vectors into \SI{128}{\bit} intermediate results and stores the lower \SI{64}{\bit}s of each in the target result vector.
+	\item \texttt{vpackssdw}: this instruction merges two vectors with signed \SI{32}{\bit} integers into one vector consisting of signed \SI{16}{\bit} integers by handling overflow conditions via saturation arithmetic, i.e., for values larger than $32767$ ($=2^{16}-1$) or smaller than $-32768$ ($=-2^{16}$), the conversion results in these extreme values. In mathematical terms, the operation may be described as follows for input vectors $a$, $b$ and result vector $r$:
+		\begin{displaymath}
+		\forall i \in \{1,\dots,|a|\}\colon r_i \coloneqq saturate(a_i), r_{|a|+i} \coloneqq saturate(b_i)
+		\end{displaymath}
+		where $saturate$ is defined as
+		\begin{displaymath}
+		saturate\colon
+		\begin{cases}
+			\{-2^{32}, \dots, 2^{32}-1\} \cap \mathbb{Z} \longrightarrow \{-2^{16}, \dots, 2^{16}-1\} \cap \mathbb{Z}, \\
+			x \mapsto min(2^{16}-1, max(x, -2^{16})).
+		\end{cases}
+		\end{displaymath}
+		Note that $|a| = |b|$ and $|r| = |a| + |b|$.
+	\item \texttt{vpaddsw}: adds signed \SI{16}{\bit} integers from two input vectors using saturation arithmetic as described above.
+	\item \texttt{vpmaddwd}: an \gls{FMA}-style operation that first multiplies corresponding signed \SI{16}{\bit} integers from two input vectors, thereby creating an equal amount of \SI{32}{\bit} temporary results. Afterwards, the adjacent results are added together to generate the result vector. For input vectors $a$ and $b$, this is the operation executed to obtain the result vector $r$:
+		\begin{displaymath}
+		\begin{pmatrix}
+		r_1 \\
+		r_2 \\
+		\dots
+		\end{pmatrix}
+		\coloneqq
+		\begin{pmatrix}
+		(a_1*b_1) + (a_2*b_2) \\
+		(a_3*b_3) + (a_4*b_4) \\
+		\dots
+		\end{pmatrix}
+		\end{displaymath}
+\end{itemize}
+
+We wrote \gls{ELF} sections for our user-space component (as described in \Cref{sec:analysis:design:userspace}) containing assembly code for all of these instructions in two variants with \SI{256}{\bit} \texttt{YMM} and \SI{512}{\bit} \texttt{ZMM} registers, respectively. Additionally, for each variant, there are two versions: an \enquote{unrolled} one and another non-\enquote{unrolled} version. The non-unrolled ones simply contain a single instruction using the first three registers, e.g.:
+
+\begin{center}
+	\begin{minted}{gas}
+	vfmaddsub132pd %zmm0, %zmm1, %zmm2
+	\end{minted}
+\end{center}
+
+By constantly keeping to execute the same instruction with the same operands, we create some artificial register pressure that prevents a core's scheduler from maximizing utilization of the two \SI{512}{\bit}-vector units available in the execution engine. The unrolled versions, on the other side, alleviate this pressure by repeating the same instruction, but with different register operands:
+
+\begin{center}
+	\begin{minted}{gas}
+	vfmaddsub132pd %zmm0, %zmm0, %zmm1
+	vfmaddsub132pd %zmm0, %zmm0, %zmm2
+	vfmaddsub132pd %zmm0, %zmm0, %zmm3
+	...
+	\end{minted}
+\end{center}
+
+Every unrolled section contains the same instruction repeated 31 times, always using \texttt{\%zmm0}/\texttt{\%ymm0} for the first two operands and \texttt{\%zmm\{1-31\}}/\texttt{\%ymm\{1-31\}} as last operand, thereby, we exhaustively make use of all 32 \texttt{ZMM}/\texttt{YMM} architectural registers available on \gls{AVX-512}-capable processors.
