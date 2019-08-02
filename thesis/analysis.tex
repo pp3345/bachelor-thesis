@@ -201,10 +201,12 @@ While the execution threads are running, our main thread awaits a \SI{1}{\milli\
 At the end, the number of copies of the \gls{AVX} code in the \texttt{LOOP\_R12\_CMP} area reflects the amount of instructions needed to cause the frequency transition.
 
 \section{Results}
+\label{sec:analysis:results}
 
 We use the described analysis framework to conduct measurements with several different \gls{AVX} instructions using all available combinations of modes, i.e., with and without pre-throttling, different target turbo license levels, with turbo frequencies enabled and disabled and with all possible amounts of cores enabled. In this section, we present our system setup, describe the precise instructions we used for testing and present as well as discuss the results.
 
 \subsection{System Setup}
+\label{sec:analysis:results:systemsetup}
 
 To execute our analysis tasks, we used an Intel Core i9-7940X processor which features 14 physical cores with twofold \gls{SMT} running at a nominal base frequency of \SI{3.1}{\giga\hertz} with a maximum turbo frequency of \SI{4.3}{\giga\hertz} \cite{intel7940x}. Additionally, the chip supports \textit{Intel Turbo Boost Max Technology 3.0}, essentially meaning that two cores may operate at a higher turbo frequency, namely \SI{4.4}{\giga\hertz}. These cores are selected based on their electrical and thermal properties during the manufacturing process \cite{intelxeonscalabledeepdive} -- this technique is otherwise also known as \textit{speed binning} \cite{lopata2012speed}. The chip's nominal \gls{TDP} is specified at \SI{165}{\watt}, and as such, this is the maximum power consumption the chip will sustain over long time periods.
 
@@ -217,6 +219,7 @@ We opted to use Fedora 29 (Server Edition) as operating system with a custom-bui
 In order to minimize overhead and latencies caused by context switches from user-space to kernel-space and vice versa, we disabled all mitigations provided by the Linux kernel for hardware vulnerabilities found in recent \glspl{CPU} (e.g., \textsc{Spectre} and \textsc{Meltdown}) as well as \gls{KASLR}.
 
 \subsection{Tested Instructions}
+\label{sec:analysis:results:testedinstructions}
 
 In order to create a precise model of the \gls{AVX} reclocking algorithm as it was implemented by Intel, we want to conduct our measurements with different kinds of \gls{AVX} instructions to find possible differences in the behavior. Note that we only tested homogeneous loads and did not run any tests with heterogeneous mixtures of different instruction classes. This remains as future work.
 
