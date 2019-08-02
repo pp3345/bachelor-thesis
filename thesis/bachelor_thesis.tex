@@ -45,6 +45,7 @@
 \usetikzlibrary{decorations.pathreplacing,shapes,positioning}
 \usepackage{marvosym}
 \usepackage{minted}
+\usepackage{sectsty}
 
 \setacronymstyle{long-sc-short-desc}
 
@@ -59,6 +60,8 @@
 \definecolor{kitcyan}     {cmyk}{0.9,  0.05, 0.0, 0.0}
 \definecolor{kitgrey}	  {cmyk}{0.0,  0.0,  0.0, 0.15}
 \definecolor{kitdarkgrey} {cmyk}{0.0,  0.0,  0.0, 0.5}
+
+\allsectionsfont{\sffamily}
 
 %\raggedbottom
 \newcommand{\todo}[1]{{\texttt{[#1]}}}
@@ -98,7 +101,7 @@
 \cleardoublepage
 \phantomsection
 \addcontentsline{toc}{chapter}{Contents}
-\tableofcontents
+{\sffamily\tableofcontents}
 
 \input{introduction}
 \input{background}
