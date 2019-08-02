@@ -130,9 +130,9 @@ In order to run tests with different instruction types, an arbitrary number of \
 	\item \texttt{LOOP\_R12\_CMP}: a spinlock-style loop is inserted that constantly compares the value referenced by the pointer stored in the \texttt{r12} register to $0$ and returns as soon as it isn't equal to $0$ anymore:
 		\begin{minted}{gas}
 		loop:
-		CMP 0x0, (%r12)
-		JE loop
-		RET
+		cmp 0x0, (%r12)
+		je loop
+		ret
 		\end{minted}
 		Note that our \gls{AVX} memory area does not have its own stack frame in any way, so we actually return the \texttt{SETUP ioctl()}'s stack frame here. This is a rather fragile and non-portable approach and may not work as desired with every \gls{libc} implementation.
 \end{itemize}
