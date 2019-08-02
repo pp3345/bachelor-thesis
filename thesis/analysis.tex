@@ -210,7 +210,7 @@ To execute our analysis tasks, we used an Intel Core i9-7940X processor which fe
 
 This \gls{CPU} is based on the \textit{Skylake (Server)} microarchitecture, the first x86 implementation featuring support for the \gls{AVX-512} extension \cite{intelxeonscalabledeepdive}, making it one of the oldest processors that expose the \gls{AVX} reclocking issue for heterogeneous workloads. However, not all \glspl{CPU} built with this microarchitecture feature the same amount of \SI{512}{\bit}-vector execution units: some have two, others only one. The i9-7940X used here has two.
 
-The processor was equipped on an ASUS TUF X299 MARK 2 motherboard along with \SI{32}{\gibi\byte} of DDR4 system memory operating at a frequency of \SI{2666}{\mega\hertz} and a NVMe Solid State Drive.
+The processor was equipped on an ASUS TUF X299 MARK 2 motherboard along with \SI{32}{\gibi\byte} of DDR4 system memory operating at a frequency of \SI{2666}{\mega\hertz} and a \gls{NVMe} Solid State Drive.
 
 We opted to use Fedora 29 (Server Edition) as operating system with a custom-built Linux 5.1.0 kernel and glibc version 2.28-33. The kernel and all of our own code were compiled using GCC 8.3.1-2 with the default \texttt{-O2} optimization level.
 
