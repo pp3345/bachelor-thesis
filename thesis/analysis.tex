@@ -294,3 +294,59 @@ By constantly keeping to execute the same instruction with the same operands, we
 \end{center}
 
 Every unrolled section contains the same instruction repeated 31 times, always using \texttt{\%zmm0}/\texttt{\%ymm0} for the first two operands and \texttt{\%zmm\{1-31\}}/\texttt{\%ymm\{1-31\}} as last operand, thereby, we exhaustively make use of all 32 \texttt{ZMM}/\texttt{YMM} architectural registers available on \gls{AVX-512}-capable processors.
+
+\subsection{Downclocking}
+\label{sec:analysis:results:downclocking}
+
+For our model of Intel's \gls{AVX} reclocking algorithm, the downclocking behavior -- i.e., the process of frequency reduction when executing \gls{AVX} instructions -- is an important puzzle piece. Here, we want to answer questions such as \enquote{How long does it take a \gls{CPU} to switch to its reduced frequency?} and \enquote{When is a frequency reduction triggered?}. We obtained the results to be presented in this section using the \hyperref[sec:analysis:design:measurementmodes:downclock]{\texttt{DOWNCLOCK}}, \hyperref[sec:analysis:design:measurementmodes:prethrottlethroughput]{\texttt{PRE\_THROTTLE\_THROUGHPUT}} and \hyperref[sec:analysis:design:measurementmodes:nonavxtime]{\texttt{NON\_AVX\_TIME}} modes provided by our measurement system as described in \Cref{sec:analysis:design}.
+
+Coarsely, we found the \gls{CPU} to generally run through the following steps for its frequency reduction:
+
+\begin{enumerate}
+	\item Throttle the \acrlong{OoO} engine
+	\item Switch to turbo license level 1 and alleviate \gls{OoO} engine throttling
+	\item Switch to turbo license level 2 (for \gls{AVX-512} \enquote{heavy} instructions)
+\end{enumerate}
+
+This already contains our first insight: even for \gls{AVX-512} instructions that Intel defines to be \enquote{heavy}, the processor will first switch to license level~1 and spend some time in that mode before performing another frequency shift to level~2 -- Intel does not mention this in their optimization manual \cite{inteloptimizationmanual}. This information is easily obtained by executing the \hyperref[sec:analysis:design:measurementmodes:downclock]{\texttt{DOWNCLOCK}} mode twice with both levels as targets -- if the \glspl{CPU} did not make this intermediate step, the test would simply hang when executed with level~1 as target as this level would never be reached.
+
+Similarly, we can reach another interesting insight: even \gls{AVX-512} heavy instructions do not always trigger a switch to level~2. We observed this behavior with the \texttt{vfmaddsub132pd} instruction, for which only the unrolled version (i.e., the one without register pressure) will ever reach level~2.
+
+We can imagine two different factors that could potentially influence this decision: the load on the core's \gls{AVX} units and the register pressure itself.
+
+\begin{figure}
+	\begin{tikzpicture}[trim axis left]
+	\sffamily
+	\begin{axis}[
+		ylabel={Instructions per Cycle},
+		scale only axis,
+		width=\textwidth,
+		height=5cm,
+		axis lines=left,
+		ymin=0,
+		ymax=0.45,
+		xtick=\empty,
+		xmin=-10,
+		xmax=1010
+	]
+		\addplot[only marks, color=kitgreen] table {plots/avx_dp_fma_512_l1_1cpus_downclock_throughput.csv} node[pos=0.5,below=0.25cm] {non-unrolled};
+		\addplot[only marks, color=kitblue] table {plots/avx_dp_fma_512_unrolled_l1_1cpus_downclock_throughput.csv} node[pos=0.5,below=0.6cm] {unrolled};
+	\end{axis}
+	\end{tikzpicture}
+	\caption{Throughput of the \texttt{vfmaddsub132pd} instruction before switching from level~0 to level~1 is doubled when unrolled.}
+	\label{fig:analysis:results:downclocking:avx_dp_fma_512_unrolled_l1_1cpus_downclock+avx_dp_fma_512_l1_1cpus_downclock:throughput}
+\end{figure}
+
+Before the first frequency reduction from level~0 to level~1 happens, we find that the instruction throughput (\gls{IPC}) is precisely doubled from $0.21$ to $0.42$ on average with the unrolled version compared to the non-unrolled implementation, as depicted in \Cref{fig:analysis:results:downclocking:avx_dp_fma_512_unrolled_l1_1cpus_downclock+avx_dp_fma_512_l1_1cpus_downclock:throughput}.
+
+This is expected: as described in \Cref{sec:analysis:results:testedinstructions}, the \gls{CPU} we used for our tests features two \gls{AVX-512} units per core, and as such, when no register pressure prevents a core from paralleling consecutive instructions, it can make full utilization of both units. However, we also found that the cores always run roughly equal amounts of instructions through both units, even in the non-unrolled case. Most likely, Intel's scheduler uses a simple round-robin algorithm to assign \glspl{microinst} to the units. This is a sign that the load on the units is not the determining factor: in the non-unrolled case the units take turns and each one stays unloaded only for a few cycles at a time.
+
+On the other side, the theory of the register pressure being the culprit here is supported by a patent on local power gating in processors published by Intel \cite{bonen2016performing}: here, Intel describes a technique to dynamically cut and restore power to both vector units and vector registers upon demand to save energy, which is likely implemented in our system's processor as described. Notably, these are controlled independent of each other and it is also noted that the \texttt{vzeroupper} instruction directly impacts the power gating behavior. This instruction zeroes the upper \SI{384}{\bit}s of each architectural \SI{512}{\bit} vector register \cite{intelsdminstructionreference}. Indeed, if we explicitly set the \SI{512}{\bit} register \texttt{ZMM0} to a value before starting execution, we find that heavy \SI{256}{\bit} (i.e., \gls{AVX2}) vector instructions -- which would normally only cause switches to level~1 -- suddenly trigger frequency switches to level~2, too, but not anymore if we additionally execute \texttt{vzeroupper} after setting \texttt{ZMM0}. This is not documented in Intel's description of the reclocking algorithm, but hints that the register usage directly impacts the turbo license level selection in addition to the types of the executed instructions.
+
+Apart from this discrepancy, we found that Intel's description of the instruction types and their associated turbo license levels holds true for the instructions we selected for testing. Now that we know the conditions and steps for frequency reductions, the next logical step is to find out when each step occurs and how much time a core spends in each state.
+
+In \Cref{sec:analysis:design:measurementmodes:prethrottlethroughput}, we described the implementation of the \texttt{PRE\_THROTTLE\_THROUGHPUT} measurement mode, designed to find out how long \gls{AVX} instructions may be executed before the \acrlong{OoO} engine is throttled with the added bonus of being able to measure what throughput could theoretically be achieved if there was no frequency reduction at all.
+
+The answer here, however, is very simple: in all tested cases, the throttling occurs immediately after execution of the first instruction has completed -- no matter what instruction is tested, how many cores are used or whether pre-throttling is enabled. This also means that we are unable to measure the theoretically achievable throughput here: with a duration of just one instruction, no reliable numbers may be obtained.
+
+After entering the throttle state, it takes some time for a core to switch to the reduced level~1 frequency.
