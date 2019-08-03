@@ -246,7 +246,7 @@ We tried to select both floating-point and integer operations that reflect the \
 	\item \texttt{vpmullq}: multiplies corresponding \SI{64}{\bit} integers from two input vectors into \SI{128}{\bit} intermediate results and stores the lower \SI{64}{\bit}s of each in the target result vector.
 	\item \texttt{vpackssdw}: this instruction merges two vectors with signed \SI{32}{\bit} integers into one vector consisting of signed \SI{16}{\bit} integers by handling overflow conditions via saturation arithmetic, i.e., for values larger than $32767$ ($=2^{15}-1$) or smaller than $-32768$ ($=-2^{15}$), the conversion results in these extreme values. In mathematical terms, the operation may be described as follows for input vectors $a$, $b$ and result vector $r$:
 		\begin{displaymath}
-		\forall i \in \{1,\dots,|a|\}\colon r_i \coloneqq saturate(a_i), r_{|a|+i} \coloneqq saturate(b_i)
+		\forall i \in \{1,\dots,|a|\} \cap \mathbb{N}\colon r_i \coloneqq saturate(a_i), r_{|a|+i} \coloneqq saturate(b_i)
 		\end{displaymath}
 		where $saturate$ is defined as
 		\begin{displaymath}
