@@ -560,3 +560,105 @@ Our findings about the second turbo license switch from level~1 to level~2 (wher
 
 \subsection{Upclocking}
 \label{sec:analysis:results:upclocking}
+
+After a core's clock is reduced due to a license level transition, it runs at the lower frequency until no more heavy instructions are being executed. However, the frequency can not be raised immediately in order to avoid flapping, and thus, the core keeps executing further instructions at a lower speed for a while -- this is what essentially causes the performance issue for heterogeneous workloads that motivated this work. Further, the upclocking part of the reclocking algorithm where it is most likely to find room for possible optimizations. Therefore, the process of raising the frequency (actually, reverting the reduction) deserves particular attention. According to Intel, as cited in this chapter's \hyperref[sec:analysis]{introduction}, this generally takes about \SI{2}{\milli\second}. To verify this claim, we used our framework's \hyperref[sec:analysis:design:measurementmodes:upclock]{\texttt{UPCLOCK}} measurement mode, which executes \gls{AVX} instructions until a license level transition occurs on a given core and then keeps the core spinning in a scalar loop until it switches back to level~0.
+
+\begin{figure}
+	\begin{tikzpicture}[trim axis left]
+	\sffamily
+	\begin{axis}[
+		ylabel={\si{\milli\second}},
+		scale only axis,
+		width=\textwidth,
+		height=5cm,
+		axis lines=left,
+		ymin=0.60,
+		ymax=0.75,
+		xtick=\empty,
+		xmin=-10,
+		xmax=1010
+	]
+	\addplot[only marks, color=kitblue] table {plots/avx_dp_fma_256_unrolled_l1_1cpus_upclock_time.csv};
+	\end{axis}
+	\begin{axis}[
+		ylabel={\si{\micro\second}},
+		scale only axis,
+		width=\textwidth,
+		height=5cm,
+		hide axis,
+		ymin=0.60,
+		ymax=0.75,
+		xtick=\empty,
+		xmin=0,
+		xmax=1000
+	]
+	\addplot[color=kitgreen, domain=0:1000, thick] {0.674503548387097} node[pos=0, below=1.2cm, anchor=west] {median = \SI{0.675}{\milli\second}};
+	\end{axis}
+	\end{tikzpicture}
+	\caption{Upclocking times after executing \SI{256}{\bit} \texttt{vfmaddsub132pd} instructions until level~1 is reached. Results show that it uniformly takes about \SI[quotient-mode=fraction]{2/3}{\milli\second}.}
+	\label{fig:analysis:results:downclocking:avx_dp_fma_256_unrolled_l1_1cpus_upclock:time}
+\end{figure}
+
+Again using the results from the \texttt{vfmaddsub132pd} instruction as example, we find that the upclocking behavior differs between several test configurations. For the \SI{256}{\bit} unrolled version executed on a single core with pre-throttling disabled and targeting level~1, we get the results depicted in \Cref{fig:analysis:results:downclocking:avx_dp_fma_256_unrolled_l1_1cpus_upclock:time}. These are very uniformly distributed around a median of \SI{0.675}{\milli\second}. Notably, this is suspiciously near to \SI[quotient-mode=fraction]{2/3}{\milli\second}.
+
+\begin{figure}
+	\begin{tikzpicture}[trim axis left]
+	\sffamily
+	\begin{axis}[
+		ylabel={\si{\milli\second}},
+		scale only axis,
+		width=\textwidth,
+		height=5cm,
+		axis lines=left,
+		ymin=0.55,
+		ymax=1.35,
+		xtick=\empty,
+		xmin=-10,
+		xmax=1010
+	]
+	\addplot[only marks, color=kitblue] table {plots/avx_dp_fma_512_unrolled_l1_1cpus_upclock_time.csv};
+	\end{axis}
+	\begin{axis}[
+		ylabel={\si{\micro\second}},
+		scale only axis,
+		width=\textwidth,
+		height=5cm,
+		hide axis,
+		ymin=0.55,
+		ymax=1.35,
+		xtick=\empty,
+		xmin=0,
+		xmax=1000
+	]
+	\addplot[color=kitgreen, domain=0:1000, thick] {0.674378709677419} node[pos=0, below=0.4cm, anchor=west] {median = \SI{0.674}{\milli\second}};
+	\end{axis}
+	\end{tikzpicture}
+	\caption{Upclocking times after executing \SI{512}{\bit} \texttt{vfmaddsub132pd} instructions until level~1 is reached. While most runs still yield a time of \SI[quotient-mode=fraction]{2/3}{\milli\second}, some are scattered within a range up to \SI[quotient-mode=fraction]{4/3}{\milli\second}.}
+	\label{fig:analysis:results:downclocking:avx_dp_fma_512_unrolled_l1_1cpus_upclock:time}
+\end{figure}
+
+Looking at the very same instruction in its \SI{512}{\bit} variant under the same test conditions in \Cref{fig:analysis:results:downclocking:avx_dp_fma_512_unrolled_l1_1cpus_upclock:time}, a different picture emerges: while the median is still nearly the same at \SI{0.674}{\milli\second}, the maximum is at \SI{1.333}{\milli\second} -- about \SI[quotient-mode=fraction]{4/3}{\milli\second}. Yet again, when going to level~2, all runs are homogeneously distributed around \SI[quotient-mode=fraction]{2/3}{\milli\second}. The results are mostly the same when executed with multiple cores, save the notable exception of pre-throttling mode: in \Cref{fig:analysis:results:downclocking:avx_dp_fma_512_unrolled_l1_1cpus_upclock:time}, \SI{69.4}{\percent} of the results are below \SI{0.7}{\milli\second}. With two cores and \gls{AVX} pre-throttling enabled, as graphed in \Cref{fig:analysis:results:downclocking:avx_dp_fma_512_unrolled_l1_2cpus_pre_throttle_avx_upclock:time}, this applies to \SI{94.7}{\percent} of the runs. Similar results are obtained with more cores. 
+
+\begin{figure}
+	\begin{tikzpicture}[trim axis left]
+	\sffamily
+	\begin{axis}[
+		ylabel={\si{\milli\second}},
+		scale only axis,
+		width=\textwidth,
+		height=5cm,
+		axis lines=left,
+		ymin=0.55,
+		ymax=1.35,
+		xtick=\empty,
+		xmin=-10,
+		xmax=1010
+	]
+	\addplot[only marks, color=kitblue] table {plots/avx_dp_fma_512_unrolled_l1_2cpus_pre_throttle_avx_upclock_time.csv};
+	\end{axis}
+	\end{tikzpicture}
+	\caption{Upclocking times after executing \SI{512}{\bit} instructions until level~1 is reached with two cores in \gls{AVX} pre-throttle mode. }
+	\label{fig:analysis:results:downclocking:avx_dp_fma_512_unrolled_l1_2cpus_pre_throttle_avx_upclock:time}
+\end{figure}
+
+Finally, in the case of \SI{512}{\bit} instructions targeting level~2, we find the data to be very much alike the \SI{256}{\bit} level~1 case: all values are located near \SI[quotient-mode=fraction]{2/3}{\milli\second} in all cases.
