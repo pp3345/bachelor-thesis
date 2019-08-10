@@ -6,8 +6,7 @@ The ultimate goal of this work is to find optimizations to the reclocking algori
 \section{Reimplementation}
 \label{sec:design:reimplementation}
 
-% perhaps talk about PMU
-TODO text here
+Like the analysis framework we presented in \Cref{sec:analysis}, \textsc{avxfreq} makes use of the processor's \gls{PMU}, the features of which we outlined in \Cref{sec:analysis:design:pmu}. This section describes the pre-existing kernel driver our reimplementation is based on, the modifications we made to it and how we use the \gls{PMU} to reach our goals.
 
 \subsection{The \texttt{intel\_pstate} Driver}
 \label{sec:design:reimplementation:intel_pstate}
