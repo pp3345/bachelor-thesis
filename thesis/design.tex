@@ -4,11 +4,13 @@
 The ultimate goal of this work is to find optimizations to the reclocking algorithm implemented in Intel \glspl{CPU} for \gls{AVX}-induced frequency reductions. In \Cref{sec:analysis} we have conducted a thorough analysis of the implementation in order to be able to conceive possible optimizations. Any ideas, however, would remain purely theoretical unless we are able to implement and experimentally test them. In this chapter, we present \textsc{avxfreq}, a modified version of the Linux kernel's \gls{DVFS} driver for Intel processors that tries to mimic Intel's hardware-based reclocking behavior. We will then use this \emph{reimplementation} to explore, implement and evaluate optimization approaches.
 
 \section{Reimplementation}
+\label{sec:design:reimplementation}
 
 % perhaps talk about PMU
 TODO text here
 
 \subsection{The \texttt{intel\_pstate} Driver}
+\label{sec:design:reimplementation:intel_pstate}
 
 \textsc{Avxfreq} was implemented by modifying Linux's \texttt{intel\_pstate} module as it is found in version 5.1.0 of the kernel. This driver is part of the \textit{\texttt{cpufreq}} subsystem which contains all of the kernel's \gls{DVFS} drivers and provides generic policies that govern the frequency selection based on system load and the user's wishes \cite{cpufreq}. %and is responsible for managing \gls{HWP} as described in \Cref{background} and selecting \glspl{P-state} based on the system's load.
 
@@ -16,6 +18,7 @@ TODO text here
 On modern Intel \glspl{CPU} with support for \gls{HWP} (as described in \Cref{sec:background}), the \texttt{intel\_pstate} driver usually does not do much: it enables \gls{HWP} using the processor's \texttt{IA32\_PM\_ENABLE} \gls{MSR}, reads the \texttt{IA32\_HWP\_CAPABILITIES} \gls{MSR} to determine the available \glspl{P-state} on each core and then only manages the \texttt{IA32\_HWP\_REQUEST} \gls{MSR} to hint the hardware about changes of the user's preferences (e.g., on minimum and maximum performance) \cite{intelsdmsysprogguide} \cite{intelpstate}. When \gls{HWP} is enabled, the operating system loses its ability to precisely manage the processor's frequency. However, using \gls{HWP} is not a strict requirement -- as long as \gls{HWP} is not explicitly activated by the computer's \gls{UEFI} or the operating system, traditional software-based performance scaling remains entirely possible. For users desiring to retain the pre-\gls{HWP} behavior, the \texttt{intel\_pstate=no\_hwp} flag exists. When this flag is passed to the Linux kernel's command line during startup, \texttt{intel\_pstate} will not enable \gls{HWP}, and thus, is still able to exercise complete control over the processor's speed. This is an important corner stone for \textsc{avxfreq}: we need to be able to fully govern the \gls{P-state} selection in order to switch frequencies by ourselves in response to changing \gls{AVX} load conditions.
 
 \subsection{\textsc{avxfreq}}
+\label{sec:design:reimplementation:avxfreq}
 
 To obtain a minimal working prototype that allows us to evaluate the general feasibility of a software-based approach to \gls{AVX} reclocking optimization, we chose to implement a simplified version of Intel's algorithm that we derived from the \gls{CPU}'s behavior when executing \SI{512}{\bit} \texttt{vfmaddsub132pd} instructions, as obtained from the analysis in \Cref{sec:analysis}. For this instruction type, we found that a single instruction is sufficient to trigger a frequency reduction. After an approximate \SI{25}{\micro\second}, level~1 is reached, and -- in the case of the unrolled version -- after another about \SI{27}{\micro\second}, the core runs at level~2. As soon as no heavy instructions were executed anymore for \SI[quotient-mode=fraction]{2/3}{\milli\second}, the processor reverts the frequency reduction and returns back to level~0. %For our implementation, we want to ignore the delays during downclocking and simply switch to level 1 as soon as a single instruction was executed
 
@@ -38,6 +41,7 @@ In general, it should not be forgotten that this implementation only tries to re
 % TODO diagram
 
 \section{User-Space-Driven Decisions}
+\label{sec:design:userspacedrivendecisions}
 
 In the previous section we have described \textsc{avxfreq}, our reimplementation that implements a subset of the \gls{AVX} reclocking algorithm employed by Intel \glspl{CPU}. This work is intended to lay a foundation that may be used for building and evaluating possible optimizations of the \gls{DVFS} mechanism without needing to modify the hardware itself. In this section, we present the implementation of a simple approach where user-space is given control over the license levels, based on the idea that a program with a heterogeneous workload knows best when it is going to execute \gls{AVX} instructions and when it is in a scalar-only stage. This approach is especially useful as it is presumably capable of providing us with a theoretically optimal baseline for \gls{AVX} reclocking that can be used to evaluate the quality of other algorithms.
 
