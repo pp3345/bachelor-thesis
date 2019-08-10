@@ -37,6 +37,19 @@ In general, it should not be forgotten that this implementation only tries to re
 
 % TODO diagram
 
-\section{Optimization Approaches}
+\section{User-Space-Driven Decisions}
 
-\subsection{User-Space-Driven Decisions}
+In the previous section we have described \textsc{avxfreq}, our reimplementation that implements a subset of the \gls{AVX} reclocking algorithm employed by Intel \glspl{CPU}. This work is intended to lay a foundation that may be used for building and evaluating possible optimizations of the \gls{DVFS} mechanism without needing to modify the hardware itself. In this section, we present the implementation of a simple approach where user-space is given control over the license levels, based on the idea that a program with a heterogeneous workload knows best when it is going to execute \gls{AVX} instructions and when it is in a scalar-only stage. This approach is especially useful as it is presumably capable of providing us with a theoretically optimal baseline for \gls{AVX} reclocking that can be used to evaluate the quality of other algorithms.
+
+For this purpose, we have extended \textsc{avxfreq} with a user-space interface consisting of multiple system calls:
+
+\begin{itemize}
+	\item \mintinline{c}{int avxfreq_is_enabled(void)} \\
+		Returns 1 if \textsc{avxfreq} was enabled during system boot, 0 otherwise. Only when \textsc{avxfreq} is enabled, user-space may use the other system calls for managing software-based reclocking and license levels.
+	\item \mintinline{c}{int avxfreq_set_reclocking(bool reclock)} \\
+		Can be used to enable and disable \textsc{avxfreq}'s own reclocking mechanism. Note that it is enabled by default when \textsc{avxfreq} is enabled.
+	\item \mintinline{c}{int avxfreq_set_license(unsigned char license)} \\
+		Invokes a license level transition to the level passed in the \texttt{license} parameter (either 0, 1, or 2).
+\end{itemize}
+
+While this interface is very simple, it allows to do exactly what we wanted to: a user-space program may use these methods to change the applied license level at will, and thus, choose appropriate license levels when it knows what instructions it is going to use over periods of time.
