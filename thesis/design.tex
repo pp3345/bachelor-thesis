@@ -37,7 +37,58 @@ This way, \textsc{avxfreq} is capable of fulfilling what we outlined at the begi
 
 In general, it should not be forgotten that this implementation only tries to reflect a subset of the results from our analysis in \Cref{sec:analysis}. Some parts are not possible to reimplement, e.g., because there are no performance events available specifically for integer vector instructions \cite{intelsdmsysprogguide}. For other parts, we deliberately decided not to implement them for now as what we built should be enough for a basic evaluation of our approach.
 
-% TODO diagram
+\begin{figure*}
+	\centering
+	\begin{tikzpicture}[font=\scriptsize]
+		\sffamily
+		\pgfmathsetmacro{\componentrectwidth}{4}
+		\pgfmathsetmacro{\componentrectheight}{6.4}
+		\pgfmathsetmacro{\separatordist}{0.5}
+		\pgfmathsetmacro{\arrowoverlength}{0.25}
+		\pgfmathsetmacro{\arrowlength}{2*(\arrowoverlength + \separatordist)}
+		\pgfmathsetmacro{\halfcomponentrectwidth}{\componentrectwidth*0.5}
+		\pgfmathsetmacro{\quartercomponentrectwidth}{\componentrectwidth*0.25}
+
+		% kernel
+		\draw (0cm,0cm) rectangle ++(\componentrectwidth cm,\componentrectheight) [ref=kernel-rect];
+		\node[color=kitblue] at ([yshift=-0.4 cm] kernel-rect south) {\textsc{avxfreq}};
+
+		% separator
+		\draw[dashed, color=kitdarkgrey] ([xshift=\separatordist cm] kernel-rect south east) -- ([xshift=\separatordist cm] kernel-rect north east) [ref=separator];
+
+		% user-space
+		\draw ([xshift=\separatordist cm] separator south east) rectangle ++(\componentrectwidth,\componentrectheight) [ref=user-rect];
+		\node[color=kitblue] at ([yshift=-0.4 cm] user-rect south) {User-space};
+
+		% steps
+		\node[align=center, anchor=north] at ([yshift=-0.1cm] kernel-rect north) {1. Setup PMU};
+
+		\node[align=center, anchor=north] at ([yshift=-0.5cm] user-rect north) {2. Execute single \\ AVX instruction};
+
+		\node[align=center, anchor=north, color=kityellow] at ([yshift=-1.2cm, xshift=-1.4cm] kernel-rect north) {\Huge\Lightning};
+		\node[align=center, anchor=north] at ([yshift=-1.2cm] kernel-rect north) {3. PMU interrupt \\ Switch to level 1};
+
+		\node[align=center, anchor=north] at ([yshift=-1.9cm] user-rect north) {4. Keep executing \\ AVX instructions};
+
+		\node[align=center, anchor=north, color=kitdarkgrey] at ([yshift=-2.55cm, xshift=-1.4cm] kernel-rect north) {\small\Interval};
+		\node[align=center, anchor=north] at ([yshift=-3cm, xshift=-1.4cm] kernel-rect north) {\tiny\SI{100}{\micro\second}};
+		\node[align=center, anchor=north] at ([yshift=-2.6cm] kernel-rect north) {5. Timer interrupt \\ Switch to level 2};
+
+		\node[align=center, anchor=north] at ([yshift=-3.3cm] user-rect north) {6. Execute AVX, \\ then scalar};
+
+		\node[align=center, anchor=north, color=kitdarkgrey] at ([yshift=-3.95cm, xshift=-1.4cm] kernel-rect north) {\small\Interval};
+		\node[align=center, anchor=north] at ([yshift=-4.4cm, xshift=-1.4cm] kernel-rect north) {\tiny\SI{100}{\micro\second}};
+		\node[align=center, anchor=north] at ([yshift=-4cm] kernel-rect north) {7. Timer interrupt \\ Nothing happens};
+
+		\node[align=center, anchor=north] at ([yshift=-4.7cm] user-rect north) {8. Keep executing \\ scalar instructions};
+
+		\node[align=center, anchor=north, color=kitdarkgrey] at ([yshift=-5.35cm, xshift=-1.4cm] kernel-rect north) {\small\Interval};
+		\node[align=center, anchor=north] at ([yshift=-5.8cm, xshift=-1.4cm] kernel-rect north) {\tiny\SI{666}{\micro\second}};
+		\node[align=center, anchor=north] at ([yshift=-5.4cm] kernel-rect north) {9. Timer interrupt \\ Revert to level 0};
+	\end{tikzpicture}
+	\caption{Simplified exemplary license level switching process with \textsc{avxfreq} and a user-space process that executes \gls{AVX} instructions for a while before continuing with purely scalar instructions.}
+	\label{fig:design:reimplementation:avxfreq}
+\end{figure*}
 
 \section{User-Space-Driven Decisions}
 \label{sec:design:userspacedrivendecisions}
