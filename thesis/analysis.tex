@@ -175,6 +175,72 @@ Our first measurement mode is designed to measure the downclocking behavior~--~i
 
 In this mode, we simply map a single memory area with \gls{AVX} code to be run by all execution threads and configure the \gls{PMU} to trigger an interrupt and freeze the performance counters as soon as one cycle is spent in either level~1 or level~2, depending on the target license level passed as command line argument to the program. We use the \texttt{WAKE\_WAIT\_THREAD} interrupt action provided by the kernel component. Thereby, we can measure the time taken for the frequency reduction. When running a test case using this measurement mode with level~2 as target, we will also see whether any cycles were spent in level~1 from the respective performance counter. Thus, this measurement mode indeed answers the aforementioned questions.
 
+\begin{figure*}
+	\centering
+	\begin{subfigure}[b]{0.5\textwidth}
+		\begin{tikzpicture}[font=\scriptsize]
+			\sffamily
+			\pgfmathsetmacro{\levelheight}{0.2}
+			\pgfmathsetmacro{\linelength}{3}
+			\pgfmathsetmacro{\barlength}{0.3}
+
+			% legend
+			\draw[fill=kitgreen, color=kitgreen] (-2.5, 0.9) rectangle ++(\barlength cm, \levelheight cm);
+			\node[minimum height=\levelheight cm, text centered, anchor=west] at (-2.15, 1) {AVX};
+
+			\node[color=kityellow, align=center] at (-2.35, 0.3) {\large\Lightning};
+			\node[minimum height=\levelheight cm, text centered, anchor=west] at (-2.15, 0.3) {Interrupt};
+
+			% level 0
+			\node[color=kitblue, minimum height=\levelheight cm, text centered] at (0, 1) {Level~0};
+			\draw[color=kitdarkgrey] (1, 1) -- ++(\linelength cm,0);
+
+			% level 1
+			\node[color=kitblue, minimum height=\levelheight cm, text centered] at (0, 0.3) {Level~1};
+			\draw[color=kitdarkgrey] (1, 0.3) -- ++(\linelength cm,0);
+
+			% bars and transitions
+			\draw[<-] (1.1, 1.1) -- ++(0, 0.2);
+			\draw[fill=kitgreen, color=kitgreen] (1.1, 0.9) rectangle ++(2cm, \levelheight cm);
+			\draw[->, anchor=east] (3.1, 0.9) -- ++(0, -0.6) node[pos=0.5, anchor=west] {\large\color{kityellow}\Lightning};
+
+			\draw[decorate, decoration={brace, amplitude=5pt, mirror}] (1.1, 0.2) -- ++(2cm,0) node[pos=0.5, anchor=north, yshift=-0.1cm] {Measure};
+		\end{tikzpicture}
+		\caption{Level~1}
+	\end{subfigure}%
+	\begin{subfigure}[b]{0.5\textwidth}
+		\begin{tikzpicture}[font=\scriptsize]
+			\sffamily
+			\pgfmathsetmacro{\levelheight}{0.2}
+			\pgfmathsetmacro{\linelength}{5}
+
+			% level 0
+			\node[color=kitblue, minimum height=\levelheight cm, text centered] at (0, 1) {Level~0};
+			\draw[color=kitdarkgrey] (1, 1) -- ++(\linelength cm,0);
+
+			% level 1
+			\node[color=kitblue, minimum height=\levelheight cm, text centered] at (0, 0.3) {Level~1};
+			\draw[color=kitdarkgrey] (1, 0.3) -- ++(\linelength cm,0);
+
+			% level 2
+			\node[color=kitblue, minimum height=\levelheight cm, text centered] at (0, -0.4) {Level~2};
+			\draw[color=kitdarkgrey] (1, -0.4) -- ++(\linelength cm,0);
+
+			% bars and transitions
+			\draw[<-] (1.1, 1.1) -- ++(0, 0.2);
+			\draw[fill=kitgreen, color=kitgreen] (1.1, 0.9) rectangle ++(2cm, \levelheight cm);
+			\draw[->, anchor=east] (3.1, 0.9) -- ++(0, -0.5);
+			\draw[fill=kitgreen, color=kitgreen] (3.1, 0.2) rectangle ++(2cm, \levelheight cm);
+			\draw[->, anchor=east] (5.1, 0.2) -- ++(0, -0.6) node[pos=0.5, anchor=west] {\large\color{kityellow}\Lightning};
+
+			\draw[decorate, decoration={brace, amplitude=5pt, mirror}] (1.1, -0.5) -- ++(4cm,0) node[pos=0.5, anchor=north, yshift=-0.1cm] {Measure};
+		\end{tikzpicture}
+		\caption{Level~2}
+	\end{subfigure}
+	\caption{Illustration of the \texttt{DOWNCLOCK} measurement mode. This mode measures the time until the requested target license level is reached.}
+	\label{fig:analysis:design:measurementmodes:downclock}
+\end{figure*}
+
 \subsubsection{UPCLOCK}
 \label{sec:analysis:design:measurementmodes:upclock}
 
