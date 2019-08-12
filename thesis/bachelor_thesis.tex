@@ -49,6 +49,7 @@
 \usepackage[autostyle]{csquotes}
 \usepackage{sectsty}
 \usepackage[clock]{ifsym}
+\usepackage{emptypage}
 
 \setacronymstyle{long-short-desc}
 
@@ -67,6 +68,12 @@
 \usemintedstyle{colorful}
 
 \allsectionsfont{\sffamily}
+
+\fancyhead[ER]{\sffamily\selectfont\slshape\rightmark}
+\fancyhead[OL]{\sffamily\selectfont\slshape\rightmark}
+\fancyhead[OR,EL]{}
+\renewcommand{\headrulewidth}{0pt}
+\pagestyle{fancy}
 
 %\raggedbottom
 \newcommand{\todo}[1]{{\texttt{[#1]}}}
