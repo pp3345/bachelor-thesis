@@ -357,6 +357,41 @@ As cited at the beginning of \hyperref[sec:analysis]{this chapter}, Intel talks 
 
 For this purpose, the \texttt{PRE\_THROTTLE\_THROUGHPUT} mode conceptually works very much the same way as the \hyperref[sec:analysis:design:measurementmodes:downclock]{\texttt{DOWNCLOCK}} mode: we configure an interrupt that fires and freezes the performance counters as soon as the first cycle was spent in throttled mode and run our \gls{AVX} code using the \texttt{WAIT\_FOR\_INTERRUPT} interrupt action. Thereby, we obtain the desired information about the behavior during the time between starting execution and \gls{OoO} engine throttling.
 
+\begin{figure*}
+	\centering
+	\begin{tikzpicture}[font=\scriptsize]
+		\sffamily
+		\pgfmathsetmacro{\levelheight}{0.2}
+		\pgfmathsetmacro{\linelength}{1.8}
+		\pgfmathsetmacro{\legendbarlength}{0.3}
+		\pgfmathsetmacro{\barlength}{1.2}
+
+		% legend
+		\draw[fill=kitgreen, color=kitgreen] (-2.5, 0.9) rectangle ++(\legendbarlength cm, \levelheight cm);
+		\node[minimum height=\levelheight cm, text centered, anchor=west] at (-2.15, 1) {AVX};
+
+		\node[color=kityellow, align=center] at (-2.35, 0.3) {\large\Lightning};
+		\node[minimum height=\levelheight cm, text centered, anchor=west] at (-2.15, 0.3) {Interrupt};
+
+		% level 0
+		\node[color=kitblue, minimum height=\levelheight cm, text centered] at (0, 1) {Level~0};
+		\draw[color=kitdarkgrey] (0.6, 1) -- ++(\linelength cm,0);
+
+		% throttle
+		\node[color=kitblue, minimum height=\levelheight cm, text centered] at (0, 0.3) {Throttle};
+		\draw[color=kitdarkgrey] (0.6, 0.3) -- ++(\linelength cm,0);
+
+		% bars and transitions
+		\draw[<-] (0.7, 1.1) -- ++(0, 0.2);
+		\draw[fill=kitgreen, color=kitgreen] (0.7, 0.9) rectangle ++(\barlength cm, \levelheight cm);
+		\draw[->] (1.9, 0.9) -- ++(0, -0.6) node[pos=0.5, anchor=west] {\large\color{kityellow}\Lightning};
+
+		\draw[decorate, decoration={brace, amplitude=5pt, mirror}] (0.7, 0.2) -- ++(\barlength cm,0) node[pos=0.5, anchor=north, yshift=-0.1cm] {measure};
+	\end{tikzpicture}
+	\caption{After starting to execute heavy \gls{AVX} instructions, a core enters a state where the \gls{OoO} engine is throttled. The \texttt{PRE\_THROTTLE\_THROUGHPUT} mode measures the time it takes until the throttling takes place.}
+	\label{fig:analysis:design:measurementmodes:prethrottlethroughput}
+\end{figure*}
+
 \subsubsection{NON\_AVX\_TIME}
 \label{sec:analysis:design:measurementmodes:nonavxtime}
 
