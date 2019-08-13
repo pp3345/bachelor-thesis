@@ -40,7 +40,7 @@ Interrupt handling is, as previously mentioned, disabled in case \textsc{avxfreq
 
 The interrupt handler itself (which now does not necessarily handle \emph{interrupts}) only needs a very small modification to work in this scenario: it must not reset the interrupt state in hardware, both for the \gls{PMU} and the \gls{APIC}. Apart from that, all interrupt actions we defined in \Cref{sec:analysis:design:kernel} work the same way as before.
 
-As shown, these modifications allow us to fully employ our analysis framework with all its features without drawbacks in combination with \textsc{avxfreq} enabled.
+As shown, these modifications allow us to fully employ our analysis framework with all its features and without drawbacks in combination with \textsc{avxfreq} enabled.
 
 \section{Results}
 \label{sec:evaluation:results}
