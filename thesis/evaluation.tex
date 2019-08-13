@@ -1,2 +1,46 @@
 \chapter{Evaluation}
 \label{sec:evaluation}
+
+We have presented the design of \textsc{avxfreq}, a software-based reimplementation of a partial model of Intel's \gls{AVX} reclocking algorithm, in the previous chapter. Further, we have described how \textsc{avxfreq} can be leveraged to allow user-space programs to choose the applied turbo license levels themselves. In this chapter, we will evaluate these implementations: in the case of \textsc{avxfreq}, we will present modifications to \textsc{avxfreq} itself as well as the analysis framework previously presented in \Cref{sec:analysis} that allow us to use the latter in order to compare \textsc{avxfreq}'s behavior to Intel's hardware implementation and the simplified algorithm we wanted to reflect. For the user-space-driven decisions we will describe the design of a simple program that simulates heterogeneous workloads with both scalar and \gls{AVX} instructions. Finally, we will present the results obtained from executing these tests.
+
+\section{Design}
+\label{sec:evaluation:design}
+
+% TODO text here
+
+\subsection{\textsc{avxfreq}}
+\label{sec:evaluation:design:avxfreq}
+
+To be able to evaluate the quality of \textsc{avxfreq}'s implementation and to measure how good it reflects the hardware's reclocking behavior, it seems a good idea to make use of the analysis framework from \Cref{sec:analysis} -- in the best case, running it with \textsc{avxfreq} should deliver similar results to what is seen with hardware reclocking. However, our framework relies on using the processor's \gls{PMU} (as described in \Cref{sec:analysis:design:pmu}), just like \textsc{avxfreq} does, and, due to the limited amount of available performance counters they may not use the \gls{PMU} concurrently. Further, hardware-side performance events that count cycles a processor's core spends in a specific turbo license level do not make sense anymore when \textsc{avxfreq} is enabled as the license levels are now emulated by software.
+
+To circumvent these obstacles, we adapted \textsc{avxfreq} and our analysis framework to work together to emulate the most important performance events in software: the idea is that \textsc{avxfreq} already uses some of the performance events that the analysis system would need anyway and that it is perfectly capable of counting cycles spent in different states. Therefore, we let \textsc{avxfreq} do the bookkeeping and provide our framework's kernel component with software-generated events instead of interrupts in a manner that is completely transparent to the user-space part.
+
+\textsc{avxfreq} in itself only needs one performance counter to count retired \SI{512}{\bit} floating-point double-precision packed vector operations and, apart from that, also makes use of a fixed counter to count core cycles. Thus, we need to provide these to the analysis framework's kernel module -- other counters may be managed by the module itself. For this purpose, \textsc{avxfreq} keeps raw counters in software that are updated using the values provided by the \gls{PMU} whenever any event triggers \textsc{avxfreq} code to be run. To enable interaction between the analysis framework's kernel module and \textsc{avxfreq}, we defined and implemented the following kernel-internal interface:
+
+\begin{itemize}
+	\item \mintinline{c}{bool avxfreq_is_enabled(void)} \\
+		Returns \mintinline{c}{true} if \textsc{avxfreq} was enabled during system boot, \mintinline{c}{false} otherwise. If \textsc{avxfreq} is not enabled, there is no reason for the analysis framework to do anything differently.
+	\item \mintinline{c}{avxfreq_counters *avxfreq_get_counters(int cpu)} \\
+		\mintinline{c}{avxfreq_counters} is a C language \mintinline{c}{struct} that contains the raw counters for the values defined above. One instance is defined for every core in the system. Given a core number, this method returns a pointer to the instance for the respective core.
+	\item \mintinline{c}{void avxfreq_reset_cycle_counter(void)} \\
+		This method resets the current core's cycle fixed counter. % TODO why the fuck do we need this
+	\item \begin{minted}[autogobble]{c}
+			void avxfreq_set_license_transition_listener
+			     (avxfreq_license_transition_listener listener)
+		\end{minted}
+		\vspace{-0.45cm} % TODO what's the correct value here?
+		Using this method, the analysis kernel module can hook into \textsc{avxfreq} and receive notifications whenever the applied virtual license level changes. The argument provided is a pointer to a function that takes two arguments: the previous virtual license level and the new one.
+\end{itemize}
+
+Using this interface, we modify our kernel component as follows: when loaded, it calls \texttt{avxfreq\_is\_enabled()} to check whether \textsc{avxfreq} is active. If so, it will not reconfigure the \gls{APIC} to take over handling of \gls{PMU} interrupts, but rather call \texttt{avxfreq\_set\_license\_transition\_listener()} to receive updates from \textsc{avxfreq} about license level switches and \texttt{avxfreq\_get\_counters()} once for every \gls{CPU} core in the system to locally store pointers to all counters provided by \textsc{avxfreq}. In addition to the raw counters, we added a local structure that contains derived counters, e.g., \textsc{avxfreq} only counts core cycles since they were last reset, but we also need to be able to distinguish cycles spent in the different license levels.
+
+Whenever the module needs to write to \gls{PMU} \glspl{MSR} after being instructed to do so by the user-space component (e.g., during the \texttt{SETUP ioctl()}), it stores updated performance counter configurations in an array, so that it can later map them to software counters from \textsc{avxfreq}. Direct writes to performance counters are remapped to the corresponding software counters, unless there is no software counter available for them -- in this case, they are routed to the \glspl{MSR} just like when \textsc{avxfreq} is disabled. Similar action is taken when trying to read performance counters. This way, \gls{PMU} configuration remains fully transparent to user-space and hardware counters are automatically remapped to software counters when required without need for further intervention.
+
+Interrupt handling is, as previously mentioned, disabled in case \textsc{avxfreq} is enabled. Instead, when the \texttt{avxfreq\_license\_transition\_listener} is called, it will update all local software counters with the values currently set in \textsc{avxfreq}'s counters and trigger the interrupt handler if the license level transition reflects one for which user-space requested an interrupt. Again, using this mechanism, we substitute hardware interrupts with software-based events in a manner that is transparent to user-space.
+
+The interrupt handler itself (which now does not necessarily handle \emph{interrupts}) only needs a very small modification to work in this scenario: it must not reset the interrupt state in hardware, both for the \gls{PMU} and the \gls{APIC}. Apart from that, all interrupt actions we defined in \Cref{sec:analysis:design:kernel} work the same way as before.
+
+As shown, these modifications allow us to fully employ our analysis framework with all its features without drawbacks in combination with \textsc{avxfreq} enabled.
+
+\section{Results}
+\label{sec:evaluation:results}
