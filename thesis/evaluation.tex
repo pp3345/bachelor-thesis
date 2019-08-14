@@ -42,5 +42,71 @@ The interrupt handler itself (which now does not necessarily handle \emph{interr
 
 As shown, these modifications allow us to fully employ our analysis framework with all its features and without drawbacks in combination with \textsc{avxfreq} enabled.
 
+\subsection{Staged Execution}
+\label{sec:evaluation:design:stagedexecution}
+
+Given that our work is originally motivated by the issue of performance degradation when executing heterogeneous workloads that make use of both \gls{AVX} and scalar instructions, it makes sense to have a tool that allows us to simulate such workloads. Together with the results from our analysis in \Cref{sec:analysis}, such a tool would allow us to create worst-case scenarios that we can use to measure the maximum negative impact of heterogeneous workloads. Further, we can use it to evaluate any improvements achieved with modified reclocking algorithms, e.g., the user-space-driven decisions we presented in \Cref{sec:design:userspacedrivendecisions}.
+
+The idea is to implement a tool that executes multiple \emph{stages} of arbitrary duration, where each stage represents a different load type: scalar, \gls{AVX} instructions targeting turbo license level~1, and \gls{AVX} targeting level~2. We use \SI{256}{\bit} and \SI{512}{\bit} \gls{FMA} instructions (\texttt{vfmaddsub132pd}, precisely) for the two latter stage types, respectively, whereas scalar stages only use simple increment and jump instructions. This was not an arbitrary choice: \textsc{avxfreq}, by design, only tries to resemble the hardware's implementation for \SI{512}{\bit} \gls{FMA} instructions.
+
+The user may pass an arbitrary amount of arguments to the program, each representing a stage and how long it should be executed in \si{\micro\second}. For example, the first argument represents a run of a scalar stage, the second one a level~1 stage, the third one a level~2 stage, the fourth one a scalar stage again, and so on. Our implementation then runs each of the passed stages one after another for the given duration. During startup, the program spawns a separate thread and binds it to a specific core and enables the \texttt{SCHED\_RR} scheduling policy to engange real-time execution -- just like our analysis framework's user-space component (see \Cref{sec:analysis:design:userspace}). This thread then executes each stage by running a loop where each iteration contains a single instruction corresponding to the stage type as described above. We enforce the configured time windows for each stage by having the main thread sleep for this duration and notify the executing thread after it has passed. Performance is then measured by counting how many iterations of the loop are executed within the stage's time window.
+
+Additionally, in order to implement the user-space-driven decisions as mentioned above, we have added a command line option which makes use of the interface we presented in \Cref{sec:design:userspacedrivendecisions} to set license levels according to the stage that is to be executed.
+
+\begin{figure*}
+	\centering
+	\begin{tikzpicture}[font=\scriptsize]
+		\sffamily
+		\pgfmathsetmacro{\linelength}{\textwidth-3cm}
+		\begin{axis}[
+			scale only axis,
+			width=\linelength,
+			height=1cm,
+			xlabel={\si{\micro\second}},
+			axis y line=none,
+			axis x line=bottom,
+			xmin=0,
+			xmax=1000,
+		]
+			\addplot[only marks, color=white] coordinates {(0,0) (1000,0)}; % this is necessary because, well, i don't know
+		\end{axis}
+
+		\pgfmathsetmacro{\barheight}{0.2}
+		\pgfmathsetmacro{\linemargin}{0.8}
+		\pgfmathsetmacro{\linepadding}{0.1}
+		\pgfmathsetmacro{\linedistance}{0.7}
+		\pgfmathsetmacro{\linezeroy}{2.1}
+		\pgfmathsetmacro{\lineoney}{\linezeroy-\linedistance}
+		\pgfmathsetmacro{\linetwoy}{\lineoney-\linedistance}
+		\pgfmathsetmacro{\levelheight}{0.2}
+
+		% level 0
+		\node[color=kitblue, minimum height=\barheight cm, text centered] at (-\linemargin, \linezeroy) {\SI{512}{\bit} AVX};
+		\draw[color=kitdarkgrey] (0, \linezeroy) -- ++(\linelength pt, 0);
+
+		% level 1
+		\node[color=kitblue, minimum height=\barheight cm, text centered] at (-\linemargin, \lineoney) {\SI{256}{\bit} AVX};
+		\draw[color=kitdarkgrey] (0, \lineoney) -- ++(\linelength pt, 0);
+
+		% level 2
+		\node[color=kitblue, minimum height=\barheight cm, text centered] at (-\linemargin, \linetwoy) {Scalar};
+		\draw[color=kitdarkgrey] (0, \linetwoy) -- ++(\linelength pt, 0);
+
+		\pgfmathsetmacro{\baronelength}{\linelength*0.2}
+		\pgfmathsetmacro{\bartwolength}{\linelength*0.15}
+		\pgfmathsetmacro{\barthreelength}{\linelength*0.4}
+		\pgfmathsetmacro{\barfourlength}{\linelength*0.1}
+		\pgfmathsetmacro{\bartwox}{0+\baronelength}
+		\pgfmathsetmacro{\barthreex}{\bartwox+\bartwolength}
+		\pgfmathsetmacro{\barfourx}{\barthreex+\barthreelength}
+		\draw[fill=kitgreen, color=kitgreen] (0, 2.0) rectangle ++(\baronelength pt, \levelheight cm);
+		\draw[fill=kitgreen, color=kitgreen] (\bartwox pt, 1.3) rectangle ++(\bartwolength pt, \levelheight cm);
+		\draw[fill=kitgreen, color=kitgreen] (\barthreex pt, 0.6) rectangle ++(\barthreelength pt, \levelheight cm);
+		\draw[fill=kitgreen, color=kitgreen] (\barfourx pt, 1.3) rectangle ++(\barfourlength pt, \levelheight cm);
+	\end{tikzpicture}
+	\caption{Exemplary run of our staged execution tool when called with \texttt{200~150~400~0~100} as command line. \SI{512}{\bit} \gls{AVX} is executed for a duration of \SI{200}{\micro\second}, then \SI{256}{\bit} \gls{AVX} for \SI{150}{\micro\second}, then purely scalar instructions for \SI{400}{\micro\second}, and finally a last stage with \SI{256}{\bit} \gls{AVX} for another \SI{100}{\micro\second}.}
+	\label{fig:evaluation:design:stagedexecution}
+\end{figure*}
+
 \section{Results}
 \label{sec:evaluation:results}
