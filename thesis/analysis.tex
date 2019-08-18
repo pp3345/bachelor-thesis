@@ -21,7 +21,7 @@ In this chapter we will describe the design of a framework that allows us to ana
 For our reimplementation, our goal is to create a model of the reclocking behavior of an \gls{AVX-512}-capable \gls{CPU} that is as complete as possible and reflects the decisions made by the hardware with high accuracy. Therefore, by conducting this analysis, we want to answer the following aspects:
 
 \begin{itemize}
-	\item When exactly does a \gls{CPU} core decide to reduce or raise it's frequency during and after \gls{AVX} execution?
+	\item When exactly does a \gls{CPU} core decide to reduce or raise its frequency during and after \gls{AVX} execution?
 	\item How much time do turbo license level switches need?
 	\item Do the \glspl{CPU} switch directly from level 0 to level 2 in case of heavy \gls{AVX-512} instructions or is there a step to level 1 in between?
 	\item What does Intel mean by \enquote{lower peak capability} while lowering the clock?
