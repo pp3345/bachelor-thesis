@@ -350,12 +350,12 @@ Using the described procedure, we measure only the time spent after reaching a t
 	\label{fig:analysis:design:measurementmodes:upclock}
 \end{figure*}
 
-\subsubsection{PRE\_THROTTLE\_THROUGHPUT}
+\subsubsection{PRE\_THROTTLE\_TIME}
 \label{sec:analysis:design:measurementmodes:prethrottlethroughput}
 
 As cited at the beginning of \hyperref[sec:analysis]{this chapter}, Intel talks in their optimization manual \cite{inteloptimizationmanual} about the \glspl{CPU} operating at a \enquote{lower peak capability} before the switch to a turbo license level with lower frequency is completed. Early experimentation showed this state is seemingly represented by the \texttt{CORE\_POWER.THROTTLE} performance event which is described \cite{intelsdmsysprogguide} to count cycles where the \gls{OoO} engine is throttled. We want to find out when exactly this throttle state is activated and what instruction throughput the \gls{CPU} achieves before throttling to get an idea of the theoretically possible performance if the frequency reduction did not exist.
 
-For this purpose, the \texttt{PRE\_THROTTLE\_THROUGHPUT} mode conceptually works very much the same way as the \hyperref[sec:analysis:design:measurementmodes:downclock]{\texttt{DOWNCLOCK}} mode: we configure an interrupt that fires and freezes the performance counters as soon as the first cycle was spent in throttled mode and run our \gls{AVX} code using the \texttt{WAIT\_FOR\_INTERRUPT} interrupt action. Thereby, we obtain the desired information about the behavior during the time between starting execution and \gls{OoO} engine throttling.
+For this purpose, the \texttt{PRE\_THROTTLE\_TIME} mode conceptually works very much the same way as the \hyperref[sec:analysis:design:measurementmodes:downclock]{\texttt{DOWNCLOCK}} mode: we configure an interrupt that fires and freezes the performance counters as soon as the first cycle was spent in throttled mode and run our \gls{AVX} code using the \texttt{WAIT\_FOR\_INTERRUPT} interrupt action. Thereby, we obtain the desired information about the behavior during the time between starting execution and \gls{OoO} engine throttling.
 
 \begin{figure*}
 	\centering
@@ -388,11 +388,11 @@ For this purpose, the \texttt{PRE\_THROTTLE\_THROUGHPUT} mode conceptually works
 
 		\draw[decorate, decoration={brace, amplitude=5pt, mirror}] (0.7, 0.2) -- ++(\barlength cm,0) node[pos=0.5, anchor=north, yshift=-0.1cm] {measure};
 	\end{tikzpicture}
-	\caption{After starting to execute heavy \gls{AVX} instructions, a core enters a state where the \gls{OoO} engine is throttled. The \texttt{PRE\_THROTTLE\_THROUGHPUT} mode measures the time it takes until the throttling takes place.}
+	\caption{After starting to execute heavy \gls{AVX} instructions, a core enters a state where the \gls{OoO} engine is throttled. The \texttt{PRE\_THROTTLE\_TIME} mode measures the time it takes until the throttling takes place.}
 	\label{fig:analysis:design:measurementmodes:prethrottlethroughput}
 \end{figure*}
 
-\subsubsection{NON\_AVX\_TIME}
+\subsubsection{REQUIRED\_INSTRUCTIONS}
 \label{sec:analysis:design:measurementmodes:nonavxtime}
 
 To obtain a model of the reclocking algorithm that is as complete as possible, we are not only interested in the time it takes for a \gls{CPU} to switch turbo license levels, but also how many instructions are precisely required to eventually trigger the frequency reduction.
@@ -505,7 +505,7 @@ Every unrolled section contains the same instruction repeated 31 times, always u
 \subsection{Downclocking}
 \label{sec:analysis:results:downclocking}
 
-For our model of Intel's \gls{AVX} reclocking algorithm, the downclocking behavior -- i.e., the process of frequency reduction when executing \gls{AVX} instructions -- is an important puzzle piece. Here, we want to answer questions such as \enquote{How long does it take a \gls{CPU} to switch to its reduced frequency?} and \enquote{When is a frequency reduction triggered?}. We obtained the results to be presented in this section using the \hyperref[sec:analysis:design:measurementmodes:downclock]{\texttt{DOWNCLOCK}}, \hyperref[sec:analysis:design:measurementmodes:prethrottlethroughput]{\texttt{PRE\_THROTTLE\_THROUGHPUT}} and \hyperref[sec:analysis:design:measurementmodes:nonavxtime]{\texttt{NON\_AVX\_TIME}} modes provided by our measurement system as described in \Cref{sec:analysis:design}.
+For our model of Intel's \gls{AVX} reclocking algorithm, the downclocking behavior -- i.e., the process of frequency reduction when executing \gls{AVX} instructions -- is an important puzzle piece. Here, we want to answer questions such as \enquote{How long does it take a \gls{CPU} to switch to its reduced frequency?} and \enquote{When is a frequency reduction triggered?}. We obtained the results to be presented in this section using the \hyperref[sec:analysis:design:measurementmodes:downclock]{\texttt{DOWNCLOCK}}, \hyperref[sec:analysis:design:measurementmodes:prethrottlethroughput]{\texttt{PRE\_THROTTLE\_TIME}} and \hyperref[sec:analysis:design:measurementmodes:nonavxtime]{\texttt{REQUIRED\_INSTRUCTIONS}} modes provided by our measurement system as described in \Cref{sec:analysis:design}.
 
 Coarsely, we found the \gls{CPU} to generally run through the following steps for its frequency reduction:
 
@@ -553,11 +553,11 @@ On the other side, the theory of the register pressure being the culprit here is
 
 Apart from this discrepancy, we found that Intel's description of the instruction types and their associated turbo license levels holds true for the instructions we selected for testing. Now that we know the steps for frequency reductions, the next logical step is to find out when each of them occurs, what is required to trigger them and how much time a core spends in each state.
 
-In \Cref{sec:analysis:design:measurementmodes:prethrottlethroughput}, we described the implementation of the \texttt{PRE\_THROTTLE\_THROUGHPUT} measurement mode, designed to find out how long \gls{AVX} instructions may be executed before the \acrlong{OoO} engine is throttled with the added bonus of being able to measure what throughput could theoretically be achieved if there was no frequency reduction at all.
+In \Cref{sec:analysis:design:measurementmodes:prethrottlethroughput}, we described the implementation of the \texttt{PRE\_THROTTLE\_TIME} measurement mode, designed to find out how long \gls{AVX} instructions may be executed before the \acrlong{OoO} engine is throttled with the added bonus of being able to measure what throughput could theoretically be achieved if there was no frequency reduction at all.
 
 The answer here, however, is very simple: in all tested cases, the throttling occurs immediately after execution of the first instruction has completed -- no matter what instruction is tested, how many cores are used or whether pre-throttling is enabled. This also means that we are unable to measure the theoretically achievable throughput here: with a duration of just one instruction, no reliable numbers may be obtained.
 
-Next, we are interested in the amount of instructions required to eventually trigger a switch to level~1. This is what the \hyperref[sec:analysis:design:measurementmodes:nonavxtime]{\texttt{NON\_AVX\_TIME}} measurement mode was built for: it incrementally builds and executes \gls{AVX} code with more instructions until a license level switch can be observed within a time window after an execution iteration.
+Next, we are interested in the amount of instructions required to eventually trigger a switch to level~1. This is what the \hyperref[sec:analysis:design:measurementmodes:nonavxtime]{\texttt{REQUIRED\_INSTRUCTIONS}} measurement mode was built for: it incrementally builds and executes \gls{AVX} code with more instructions until a license level switch can be observed within a time window after an execution iteration.
 
 Here, we indeed found interesting differences between different instruction types: all \SI{512}{\bit} ones require just exactly one instruction to be executed and the core is going to switch to level~1. For \SI{256}{\bit} instructions, however, a quite different picture emerges: \Cref{fig:analysis:results:downclocking:avx_dp_fma_256_unrolled_l1_1cpus_non_avx_time:avx_instructions} depicts the required amount of instructions exemplary for the \SI{256}{\bit} \texttt{vfmaddsub132pd} unrolled case, without pre-throttling and with one core. The result varies between a minimum of $3317$ and a maximum of $30845$ instructions while the average and the median are set rather near each other, at $12982.8$ and $12431$, respectively. \Cref{fig:analysis:results:downclocking:avx_dp_fma_256_unrolled_l1_1cpus_non_avx_time:avx_instructions:histogram} shows the same data, plotted as a histogram. It becomes clearly visible that the median is far nearer to the minimum than it is to the maximum.
 
