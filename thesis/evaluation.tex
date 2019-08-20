@@ -139,6 +139,7 @@ The first scalar loop achieves approximately similar median performance with all
 	\begin{tikzpicture}[trim axis left]
 		\sffamily
 		\begin{axis}[
+			xlabel={Runs ($n=1000$)},
 			ylabel={\gls{AVX-512} \gls{FMA} loop iterations},
 			scale only axis,
 			width=\textwidth,
@@ -171,6 +172,7 @@ Unlike the hardware algorithm, \textsc{avxfreq} requires two interrupts for cond
 	\begin{tikzpicture}[trim axis left]
 		\sffamily
 		\begin{axis}[
+			xlabel={Runs ($n=1000$)},
 			ylabel={Scalar loop iterations},
 			scale only axis,
 			width=\textwidth,

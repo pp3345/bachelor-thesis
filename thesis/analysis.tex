@@ -525,6 +525,7 @@ We can imagine two different factors that could potentially influence this decis
 	\begin{tikzpicture}[trim axis left]
 	\sffamily
 	\begin{axis}[
+		xlabel={Runs ($n=1000$)},
 		ylabel={Instructions per Cycle},
 		scale only axis,
 		width=\textwidth,
@@ -564,6 +565,7 @@ Here, we indeed found interesting differences between different instruction type
 	\begin{tikzpicture}[trim axis left]
 	\sffamily
 	\begin{axis}[
+		xlabel={Runs ($n=1000$)},
 		ylabel={Instructions},
 		scale only axis,
 		width=\textwidth,
@@ -628,6 +630,7 @@ With these results we have fully established all conditions required for \gls{AV
 	\begin{tikzpicture}[trim axis left]
 	\sffamily
 	\begin{axis}[
+		xlabel={Runs ($n=1000$)},
 		ylabel={\si{\micro\second}},
 		scale only axis,
 		width=\textwidth,
@@ -667,6 +670,7 @@ Again, we find \SI{512}{\bit} and \SI{256}{\bit} instructions to have noticeable
 	\begin{tikzpicture}[trim axis left]
 	\sffamily
 	\begin{axis}[
+		xlabel={Runs ($n=1000$)},
 		ylabel={\si{\micro\second}},
 		scale only axis,
 		width=\textwidth,
@@ -694,6 +698,7 @@ Looking at \SI{256}{\bit} instructions, we find that the downclocking time to le
 	\begin{tikzpicture}[trim axis left]
 	\sffamily
 	\begin{axis}[
+		xlabel={Runs ($n=1000$)},
 		ylabel={\si{\micro\second}},
 		scale only axis,
 		width=\textwidth,
@@ -733,6 +738,7 @@ So far we have described the frequency reduction process until level~1 is reache
 	\begin{tikzpicture}[trim axis left]
 	\sffamily
 	\begin{axis}[
+	xlabel={Runs ($n=1000$)},
 	ylabel={\si{\micro\second}},
 	scale only axis,
 	width=\textwidth,
@@ -779,6 +785,7 @@ After a core's clock is reduced due to a license level transition, it runs at th
 	\begin{tikzpicture}[trim axis left]
 	\sffamily
 	\begin{axis}[
+		xlabel={Runs ($n=1000$)},
 		ylabel={\si{\milli\second}},
 		scale only axis,
 		width=\textwidth,
@@ -818,6 +825,7 @@ Again using the results from the \texttt{vfmaddsub132pd} instruction as example,
 	\begin{tikzpicture}[trim axis left]
 	\sffamily
 	\begin{axis}[
+		xlabel={Runs ($n=1000$)},
 		ylabel={\si{\milli\second}},
 		scale only axis,
 		width=\textwidth,
@@ -857,6 +865,7 @@ Looking at the very same instruction in its \SI{512}{\bit} variant under the sam
 	\begin{tikzpicture}[trim axis left]
 	\sffamily
 	\begin{axis}[
+		xlabel={Runs ($n=1000$)},
 		ylabel={\si{\milli\second}},
 		scale only axis,
 		width=\textwidth,
