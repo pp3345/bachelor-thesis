@@ -569,11 +569,12 @@ Here, we indeed found interesting differences between different instruction type
 		width=\textwidth,
 		height=5cm,
 		axis lines=left,
-		ymin=2900,
+		ymin=1700,
 		ymax=32000,
 		xtick=\empty,
 		xmin=-10,
-		xmax=1010
+		xmax=1010,
+		axis y discontinuity=parallel
 	]
 		\addplot[only marks, color=kitblue] table {plots/avx_dp_fma_256_unrolled_l1_1cpus_non_avx_time_avx_instructions.csv};
 	\end{axis}
@@ -636,7 +637,8 @@ With these results we have fully established all conditions required for \gls{AV
 		ymax=50,
 		xtick=\empty,
 		xmin=-10,
-		xmax=1010
+		xmax=1010,
+		axis y discontinuity=parallel
 	]
 	\addplot[only marks, color=kitblue] table {plots/avx_dp_fma_512_l1_1cpus_downclock_time.csv};
 	\end{axis}
@@ -674,7 +676,8 @@ Again, we find \SI{512}{\bit} and \SI{256}{\bit} instructions to have noticeable
 		ymax=50,
 		xtick=\empty,
 		xmin=-10,
-		xmax=1010
+		xmax=1010,
+		axis y discontinuity=parallel
 	]
 	\addplot[only marks, color=kitblue, mark options={scale=0.5}] table {plots/avx_dp_fma_512_l1_3cpus_downclock_time_cpu0.csv};
 	\addplot[only marks, color=kitgreen, mark options={scale=0.5}] table {plots/avx_dp_fma_512_l1_3cpus_downclock_time_cpu1.csv};
@@ -696,11 +699,12 @@ Looking at \SI{256}{\bit} instructions, we find that the downclocking time to le
 		width=\textwidth,
 		height=5cm,
 		axis lines=left,
-		ymin=25,
+		ymin=24,
 		ymax=78,
 		xtick=\empty,
 		xmin=-10,
-		xmax=1010
+		xmax=1010,
+		axis y discontinuity=parallel
 	]
 	\addplot[only marks, color=kitblue] table {plots/avx_dp_fma_256_unrolled_l1_1cpus_downclock_time.csv};
 	\end{axis}
@@ -710,13 +714,13 @@ Looking at \SI{256}{\bit} instructions, we find that the downclocking time to le
 		width=\textwidth,
 		height=5cm,
 		hide axis,
-		ymin=25,
+		ymin=24,
 		ymax=78,
 		xtick=\empty,
 		xmin=0,
 		xmax=1000
 	]
-	\addplot[color=kitgreen, domain=0:1000, thick] {51.516774193548} node[pos=0, below=2.1cm, anchor=west] {median = \SI{51.52}{\micro\second}};
+	\addplot[color=kitgreen, domain=0:1000, thick] {51.516774193548} node[pos=0, below=2.05cm, anchor=west] {median = \SI{51.52}{\micro\second}};
 	\end{axis}
 	\end{tikzpicture}
 	\caption{Downclocking time to level 1 for the \SI{256}{\bit} \texttt{vfmaddsub132pd} instruction. This takes a lot longer than with the \SI{512}{\bit} version.}
@@ -738,7 +742,8 @@ So far we have described the frequency reduction process until level~1 is reache
 	ymax=80,
 	xtick=\empty,
 	xmin=-10,
-	xmax=1010
+	xmax=1010,
+%	axis y discontinuity=parallel
 	]
 	\addplot[only marks, color=kitblue] table {plots/avx_dp_fma_512_unrolled_l2_1cpus_downclock_time.csv};
 	\end{axis}
@@ -752,12 +757,12 @@ So far we have described the frequency reduction process until level~1 is reache
 	ymax=80,
 	xtick=\empty,
 	xmin=0,
-	xmax=1000
+	xmax=1000,
 	]
-	\addplot[color=kitgreen, domain=0:1000, thick] {51.433548387097} node[pos=0, below=0.9cm, anchor=west] {median = \SI{51.43}{\micro\second}};
+	\addplot[color=kitgreen, domain=0:1000, thick] {51.433548387097} node[pos=0, below=0.75cm, anchor=west] {median = \SI{51.43}{\micro\second}};
 	\end{axis}
 	\end{tikzpicture}
-	\caption{Time taken from level~0 to level~2 with the \texttt{vfmaddsub132pd} instruction. Yet again, the results are very homogeneous.}
+	\caption{Time taken from level~0 to level~2 with the \texttt{vfmaddsub132pd} instruction. Again, the results are very homogeneous.}
 	\label{fig:analysis:results:downclocking:avx_dp_fma_512_unrolled_l2_1cpus_downclock:time}
 \end{figure}
 
@@ -779,11 +784,12 @@ After a core's clock is reduced due to a license level transition, it runs at th
 		width=\textwidth,
 		height=5cm,
 		axis lines=left,
-		ymin=0.60,
+		ymin=0.65,
 		ymax=0.75,
 		xtick=\empty,
 		xmin=-10,
-		xmax=1010
+		xmax=1010,
+		axis y discontinuity=parallel
 	]
 	\addplot[only marks, color=kitblue] table {plots/avx_dp_fma_256_unrolled_l1_1cpus_upclock_time.csv};
 	\end{axis}
@@ -793,13 +799,13 @@ After a core's clock is reduced due to a license level transition, it runs at th
 		width=\textwidth,
 		height=5cm,
 		hide axis,
-		ymin=0.60,
+		ymin=0.65,
 		ymax=0.75,
 		xtick=\empty,
 		xmin=0,
 		xmax=1000
 	]
-	\addplot[color=kitgreen, domain=0:1000, thick] {0.674503548387097} node[pos=0, below=1.2cm, anchor=west] {median = \SI{0.675}{\milli\second}};
+	\addplot[color=kitgreen, domain=0:1000, thick] {0.674503548387097} node[pos=0, below=0.72cm, anchor=west] {median = \SI{0.675}{\milli\second}};
 	\end{axis}
 	\end{tikzpicture}
 	\caption{Upclocking times after executing \SI{256}{\bit} \texttt{vfmaddsub132pd} instructions until level~1 is reached. Results show that it uniformly takes about \SI[quotient-mode=fraction]{2/3}{\milli\second}.}
@@ -817,11 +823,12 @@ Again using the results from the \texttt{vfmaddsub132pd} instruction as example,
 		width=\textwidth,
 		height=5cm,
 		axis lines=left,
-		ymin=0.55,
+		ymin=0.5,
 		ymax=1.35,
 		xtick=\empty,
 		xmin=-10,
-		xmax=1010
+		xmax=1010,
+		axis y discontinuity=parallel
 	]
 	\addplot[only marks, color=kitblue] table {plots/avx_dp_fma_512_unrolled_l1_1cpus_upclock_time.csv};
 	\end{axis}
@@ -831,7 +838,7 @@ Again using the results from the \texttt{vfmaddsub132pd} instruction as example,
 		width=\textwidth,
 		height=5cm,
 		hide axis,
-		ymin=0.55,
+		ymin=0.5,
 		ymax=1.35,
 		xtick=\empty,
 		xmin=0,
@@ -855,11 +862,12 @@ Looking at the very same instruction in its \SI{512}{\bit} variant under the sam
 		width=\textwidth,
 		height=5cm,
 		axis lines=left,
-		ymin=0.55,
+		ymin=0.5,
 		ymax=1.35,
 		xtick=\empty,
 		xmin=-10,
-		xmax=1010
+		xmax=1010,
+		axis y discontinuity=parallel,
 	]
 	\addplot[only marks, color=kitblue] table {plots/avx_dp_fma_512_unrolled_l1_2cpus_pre_throttle_avx_upclock_time.csv};
 	\end{axis}

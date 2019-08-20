@@ -144,13 +144,14 @@ The first scalar loop achieves approximately similar median performance with all
 			width=\textwidth,
 			height=5cm,
 			axis lines=left,
-			ymin=73000000,
+			ymin=72500000,
 			ymax=84000000,
 			xtick=\empty,
 			xmin=-10,
 			xmax=1010,
 			legend cell align=left,
-			legend style={at={(\textwidth-\textwidth/1020*10,0.5)}, anchor=east}
+			legend style={at={(\textwidth-\textwidth/1020*10,0.5)}, anchor=east},
+			axis y discontinuity=parallel
 		]
 			\addplot[only marks, color=kitblue] table {plots/staged_execution_0_0_2000000_200000_0_666_avx_hwp.csv}; %node[pos=1.0,below=0.5cm,anchor=east] {Hardware reclocking};
 			\addplot[only marks, color=kitgreen] table {plots/staged_execution_0_0_2000000_200000_0_666_avx_manual.csv}; %node[pos=1.0,above=0.72cm,anchor=east] {User-space-driven};
@@ -175,13 +176,14 @@ Unlike the hardware algorithm, \textsc{avxfreq} requires two interrupts for cond
 			width=\textwidth,
 			height=5cm,
 			axis lines=left,
-			ymin=240000,
+			ymin=225000,
 			ymax=490000,
 			xtick=\empty,
 			xmin=-10,
 			xmax=1010,
 			legend cell align=left,
-			legend style={at={(\textwidth-\textwidth/1020*10,0.75)}, anchor=east}
+			legend style={at={(\textwidth-\textwidth/1020*10,0.75)}, anchor=east},
+			axis y discontinuity=parallel
 		]
 			\addplot[only marks, color=kitblue, mark options={scale=0.5}] table {plots/staged_execution_0_0_2000000_200000_0_666_scalar2_hwp.csv}; %node[pos=1.0,below=0.5cm,anchor=east] {Hardware reclocking};
 			\addplot[only marks, color=kitgreen, mark options={scale=0.5}] table {plots/staged_execution_0_0_2000000_200000_0_666_scalar2_manual.csv}; %node[pos=1.0,above=0.72cm,anchor=east] {User-space-driven};
