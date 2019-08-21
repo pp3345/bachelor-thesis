@@ -133,7 +133,7 @@ We designed our staged execution tool with the goal of being able to determine a
 
 To obtain the following results, we ran our staged execution tool using\\\texttt{0~0~2000000~200000~0~666} as command line. This means that it first runs a scalar loop for \SI{2}{\second}, then an \gls{AVX-512} \gls{FMA} loop for \SI{200}{\milli\second}, and finally another scalar loop for \SI{666}{\micro\second}. The last scalar loop's length is motivated by the fact that the hardware reclocking algorithm usually takes \SI[quotient-mode=fraction]{2/3}{\milli\second} to return a core to its level~0 frequency as we found out through the analysis we conducted in \Cref{sec:analysis}, thus, this should expose worst-case behavior when using hardware reclocking. The other durations were selected mostly arbitrarily -- we only wanted to ensure that there is enough time for a core to reach its maximum frequency within the first scalar loop. We ran our tool with three configurations, each executed 1000 times: with hardware reclocking, with \textsc{avxfreq} reclocking, and with user-space-driven manual reclocking through \textsc{avxfreq}.
 
-The first scalar loop achieves approximately similar median performance with all three configurations: $1260960775$ iterations with hardware reclocking, $1264414085$ with \textsc{avxfreq} (approx. \SI{0.27}{\percent} faster), and $1263630469.5$ with user-space-driven reclocking (approx. \SI{0.21}{\percent} faster). These deviations seem negligible and we consider them to be statistical noise.
+The first scalar loop achieves approximately similar median performance with all three configurations: $1261438095.5$ iterations with hardware reclocking, $1265373194.5$ with \textsc{avxfreq} (approx. \SI{0.31}{\percent} faster), and $1262432636$ with user-space-driven reclocking (approx. \SI{0.08}{\percent} faster). These deviations seem negligible and we consider them to be statistical noise.
 
 \begin{figure}
 	\begin{tikzpicture}[trim axis left]
@@ -145,28 +145,28 @@ The first scalar loop achieves approximately similar median performance with all
 			width=\textwidth,
 			height=5cm,
 			axis lines=left,
-			ymin=72500000,
-			ymax=84000000,
+			ymin=35000000,
+			ymax=36200000,
 			xtick=\empty,
 			xmin=-10,
 			xmax=1010,
 			legend cell align=left,
-			legend style={at={(\textwidth-\textwidth/1020*10,0.5)}, anchor=east},
+			legend style={at={(\textwidth-\textwidth/1020*10,0.25)}, anchor=east},
 			axis y discontinuity=parallel
 		]
-			\addplot[only marks, color=kitblue] table {plots/staged_execution_0_0_2000000_200000_0_666_avx_hwp.csv}; %node[pos=1.0,below=0.5cm,anchor=east] {Hardware reclocking};
-			\addplot[only marks, color=kitgreen] table {plots/staged_execution_0_0_2000000_200000_0_666_avx_manual.csv}; %node[pos=1.0,above=0.72cm,anchor=east] {User-space-driven};
-			\addplot[only marks, color=kityellow] table {plots/staged_execution_0_0_2000000_200000_0_666_avx_avxfreq.csv}; %node[pos=1.0,above=0.67cm,anchor=east] {\textsc{avxfreq}};
+			\addplot[only marks, color=kitblue, mark options={scale=0.5}] table {plots/staged_execution_0_0_2000000_200000_0_666_avx_hwp.csv}; %node[pos=1.0,below=0.5cm,anchor=east] {Hardware reclocking};
+			\addplot[only marks, color=kitgreen, mark options={scale=0.5}] table {plots/staged_execution_0_0_2000000_200000_0_666_avx_manual.csv}; %node[pos=1.0,above=0.72cm,anchor=east] {User-space-driven};
+			\addplot[only marks, color=kityellow, mark options={scale=0.5}] table {plots/staged_execution_0_0_2000000_200000_0_666_avx_avxfreq.csv}; %node[pos=1.0,above=0.67cm,anchor=east] {\textsc{avxfreq}};
 			\legend{Hardware,User-space,\textsc{avxfreq}}
 		\end{axis}
 	\end{tikzpicture}
-	\caption{Completed \gls{AVX-512} \gls{FMA} loop iterations within \SI{200}{\milli\second} when core frequency is controlled by the hardware, by the user-space program itself, and by our reimplementation \textsc{avxfreq}. Hardware reclocking yields the best performance, while user-space-controlled reclocking is slightly faster than \textsc{avxfreq}.}
+	\caption{Completed \gls{AVX-512} \gls{FMA} loop iterations within \SI{200}{\milli\second} when core frequency is controlled by the hardware, by the user-space program itself, and by our reimplementation \textsc{avxfreq}. Hardware as well as user-space reclocking yield the best performance, while \textsc{avxfreq} is slightly slower.}
 	\label{fig:evaluation:results:stagedexecution:avxstage}
 \end{figure}
 
-For the following \gls{AVX-512} loop, we find more interesting differences: as shown in \Cref{fig:evaluation:results:stagedexecution:avxstage}, \textsc{avxfreq} performs about \SI{11.7}{\percent} worse than hardware reclocking, yet it does so in a very consistent manner across all runs. User-space-driven decisions yield a performance increase of around \SI{1}{\percent} compared to \textsc{avxfreq}, but still result in a \SI{10.7}{\percent} decrease compared to the hardware implementation.
+For the following \gls{AVX-512} loop, we find more interesting differences: as shown in \Cref{fig:evaluation:results:stagedexecution:avxstage}, \textsc{avxfreq} performs about \SI{0.9}{\percent} worse than hardware reclocking, yet it does so in a very consistent manner across all runs. User-space-driven decisions yield a performance increase of around \SI{1}{\percent} compared to \textsc{avxfreq}, and reach similar performance as hardware reclocking -- surprisingly, with a lower variance.
 
-Unlike the hardware algorithm, \textsc{avxfreq} requires two interrupts for conducting a switch from turbo license level~0 to level~2. Further, since we can not disable hardware reclocking entirely on our test system, the hardware will still induce a single, additional frequency switch (but only one, since the offsets for both levels are the same). User-space decisions being faster than \textsc{avxfreq} is not surprising though, given that they do not require any interrupts, but only a single system call that directly switches from level~0 to level~2 without a step to level~1 in between. Additionally, it seems plausible that the chip takes longer to apply frequency switches requested by software than it needs for turbo license level switches after internal hardware events. Putting it all together, we do not have an exhaustive and conclusive explanation for this behavior, and finding one remains future work.
+Unlike the hardware algorithm, \textsc{avxfreq} requires two interrupts for conducting a switch from turbo license level~0 to level~2. Further, since we can not disable hardware reclocking entirely on our test system, the hardware will still induce a single, additional frequency switch (but only one, since the offsets for both levels are the same). User-space decisions being faster than \textsc{avxfreq} is not surprising though, given that they do not require any interrupts, but only a single system call that directly switches from level~0 to level~2 without a step to level~1 in between.
 
 \begin{figure}
 	\begin{tikzpicture}[trim axis left]
@@ -178,8 +178,8 @@ Unlike the hardware algorithm, \textsc{avxfreq} requires two interrupts for cond
 			width=\textwidth,
 			height=5cm,
 			axis lines=left,
-			ymin=225000,
-			ymax=490000,
+			ymin=250000,
+			ymax=530000,
 			xtick=\empty,
 			xmin=-10,
 			xmax=1010,
@@ -193,8 +193,8 @@ Unlike the hardware algorithm, \textsc{avxfreq} requires two interrupts for cond
 			\legend{Hardware,User-space,\textsc{avxfreq}}
 		\end{axis}
 	\end{tikzpicture}
-	\caption{Completed scalar loop iterations within \SI{666}{\micro\second} when core frequency is controlled by the hardware, by the user-space program itself, and by our reimplementation \textsc{avxfreq}. Again, hardware is faster than \textsc{avxfreq}, but on median user-space reclocking outperforms both, with the caveat of high variance.}
+	\caption{Completed scalar loop iterations within \SI{666}{\micro\second} after previous \gls{AVX-512} \gls{FMA} execution when core frequency is controlled by the hardware, by the user-space program itself, and by our reimplementation \textsc{avxfreq}. Again, hardware is faster than \textsc{avxfreq}, but in the median case user-space reclocking outperforms both, with the caveat of exhibiting high variance.}
 	\label{fig:evaluation:results:stagedexecution:scalarstage2}
 \end{figure}
 
-\Cref{fig:evaluation:results:stagedexecution:scalarstage2} finally depicts the completed iterations of the last scalar loop for the three different setups. The hardware implementation reaches a median of $298849$ iterations, \textsc{avxfreq} is again about \SI{12.4}{\percent} slower with a median of $261738.5$. Compared to these, user-space manual reclocking shows extremely varying performance, however, in the median case it outperforms the hardware reclocking with $305805.5$, equaling a \SI{2.3}{\percent} increase in comparison. Again, we are unsure about the precise source of the high variance and can only generally attribute it to the arguments mentioned in the previous paragraph. Yet it is intriguing that we only experience this variance when upclocking, but not when downclocking. However, from the \gls{PCU}'s perspective this might make sense: downclocking can only reduce the chip's power consumption, while upclocking will most certainly increase it. Thus, it is likely that a requested frequency reduction may be granted instantaneously, while a frequency increase requires the \gls{PCU} to reevaluate the global load situation as it must ensure at all times that the processor's power consumption never exceeds its \gls{TDP}.
+\Cref{fig:evaluation:results:stagedexecution:scalarstage2} finally depicts the completed iterations of the last scalar loop for the three different setups. The hardware implementation reaches a median of $299004$ iterations, \textsc{avxfreq} is again about \SI{1.8}{\percent} slower with a median of $293518.5$. Compared to these, user-space manual reclocking shows extremely varying performance, however, in most runs it outperforms the hardware reclocking with a median of $323083.5$, equaling an \SI{8}{\percent} increase in comparison. Again, we are unsure about the precise source of the high variance and can only generally attribute it to the arguments mentioned in the previous paragraph. Yet it is intriguing that we only experience this variance when upclocking, but not when downclocking. However, from the \gls{PCU}'s perspective this might make sense: downclocking can only reduce the chip's power consumption, while upclocking will most certainly increase it. Thus, it is likely that a requested frequency reduction may be granted instantaneously, while a frequency increase requires the \gls{PCU} to reevaluate the global load situation as it must ensure at all times that the processor's power consumption never exceeds its \gls{TDP}.
