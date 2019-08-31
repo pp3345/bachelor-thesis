@@ -204,7 +204,7 @@ In this mode, we simply map a single memory area with \gls{AVX} code to be run b
 			\draw[fill=kitgreen, color=kitgreen] (1.1, 0.9) rectangle ++(2cm, \levelheight cm);
 			\draw[->, anchor=east] (3.1, 0.9) -- ++(0, -0.6) node[pos=0.5, anchor=west] {\large\color{kityellow}\Lightning};
 
-			\draw[decorate, decoration={brace, amplitude=5pt, mirror}] (1.1, 0.2) -- ++(2cm,0) node[pos=0.5, anchor=north, yshift=-0.1cm] {measure};
+			\draw[decorate, decoration={brace, amplitude=5pt, mirror}] (1.1, 0.2) -- ++(2cm,0) node[pos=0.5, anchor=north, yshift=-0.1cm, align=center] {measure \\ time};
 		\end{tikzpicture}
 		\caption{Level~1}
 	\end{subfigure}%
@@ -233,7 +233,7 @@ In this mode, we simply map a single memory area with \gls{AVX} code to be run b
 			\draw[fill=kitgreen, color=kitgreen] (3.1, 0.2) rectangle ++(2cm, \levelheight cm);
 			\draw[->, anchor=east] (5.1, 0.2) -- ++(0, -0.6) node[pos=0.5, anchor=west] {\large\color{kityellow}\Lightning};
 
-			\draw[decorate, decoration={brace, amplitude=5pt, mirror}] (1.1, -0.5) -- ++(4cm,0) node[pos=0.5, anchor=north, yshift=-0.1cm] {measure};
+			\draw[decorate, decoration={brace, amplitude=5pt, mirror}] (1.1, -0.5) -- ++(4cm,0) node[pos=0.5, anchor=north, yshift=-0.1cm, align=center] {measure \\ time};
 		\end{tikzpicture}
 		\caption{Level~2}
 	\end{subfigure}
@@ -285,7 +285,7 @@ Using the described procedure, we measure only the time spent after reaching a t
 		\draw[fill=kitbrown, color=kitbrown] (1.9, 0.2) rectangle ++(\barlength cm, \levelheight cm);
 		\draw[->] (3.1, 0.4) -- ++(0, 0.6) node[pos=0.41666, anchor=west] {\large\color{kityellow}\Lightning};
 
-		\draw[decorate, decoration={brace, amplitude=5pt, mirror}] (1.9, 0.2) -- ++(\barlength cm,0) node[pos=0.5, anchor=north, yshift=-0.1cm] {measure};
+		\draw[decorate, decoration={brace, amplitude=5pt, mirror}] (1.9, 0.2) -- ++(\barlength cm,0) node[pos=0.5, anchor=north, yshift=-0.1cm, align=center] {measure \\ time};
 		\end{tikzpicture}
 		\caption{Level~1}
 	\end{subfigure}%
@@ -342,7 +342,7 @@ Using the described procedure, we measure only the time spent after reaching a t
 		\pgfmathsetmacro{\arrowfournodepos}{0.5*\interbararrowheight/\arrowfourlength}
 		\draw[->, anchor=east] (\arrowfourx,\arrowfoury) -- ++(0, \arrowfourlength cm) node[pos=\arrowfournodepos, anchor=west] {\large\color{kityellow}\Lightning};
 
-		\draw[decorate, decoration={brace, amplitude=5pt, mirror}] (\barthreex, \measurey) -- ++(\barlength cm,0) node[pos=0.5, anchor=north, yshift=-0.1cm] {measure};
+		\draw[decorate, decoration={brace, amplitude=5pt, mirror}] (\barthreex, \measurey) -- ++(\barlength cm,0) node[pos=0.5, anchor=north, yshift=-0.1cm, align=center] {measure \\ time};
 		\end{tikzpicture}
 		\caption{Level~2}
 	\end{subfigure}
@@ -386,7 +386,7 @@ For this purpose, the \texttt{PRE\_THROTTLE\_TIME} mode conceptually works very 
 		\draw[fill=kitgreen, color=kitgreen] (0.7, 0.9) rectangle ++(\barlength cm, \levelheight cm);
 		\draw[->] (1.9, 0.9) -- ++(0, -0.6) node[pos=0.5, anchor=west] {\large\color{kityellow}\Lightning};
 
-		\draw[decorate, decoration={brace, amplitude=5pt, mirror}] (0.7, 0.2) -- ++(\barlength cm,0) node[pos=0.5, anchor=north, yshift=-0.1cm] {measure};
+		\draw[decorate, decoration={brace, amplitude=5pt, mirror}] (0.7, 0.2) -- ++(\barlength cm,0) node[pos=0.5, anchor=north, yshift=-0.1cm, align=center] {measure \\ instructions};
 	\end{tikzpicture}
 	\caption{After starting to execute heavy \gls{AVX} instructions, a core enters a state where the \gls{OoO} engine is throttled. The \texttt{PRE\_THROTTLE\_TIME} mode measures the time it takes until the throttling takes place.}
 	\label{fig:analysis:design:measurementmodes:prethrottlethroughput}
@@ -442,7 +442,7 @@ At the end, the number of copies of the \gls{AVX} code in the \texttt{LOOP\_R12\
 		\draw[->] (2.2, 0.9) -- ++(0, -0.6) node[pos=0.5, anchor=west] {\large\color{kityellow}\Lightning};
 		\draw[draw=none] (0.7, 0.9) rectangle ++(\barlength cm, \levelheight cm) node[pos=0.5, align=center, color=black, font=\tiny] {\texttt{LOOP\_R12\_CMP}};
 
-		\draw[decorate, decoration={brace, amplitude=3pt, mirror}] (0.7, 0.3) -- ++(0.6 cm,0) node[pos=0.5, anchor=north, yshift=-0.1cm, align=center] {measure \\ instructions};
+		\draw[decorate, decoration={brace, amplitude=3pt, mirror}] (0.7, 0.2) -- ++(0.6 cm,0) node[pos=0.5, anchor=north, yshift=-0.1cm, align=center] {measure \\ instructions};
 		\end{tikzpicture}
 		\caption{Level~1}
 	\end{subfigure}%
