@@ -459,7 +459,7 @@ At the end, the number of copies of the \gls{AVX} code in the \texttt{LOOP\_R12\
 		\pgfmathsetmacro{\lineoney}{\linezeroy-\linedistance}
 		\pgfmathsetmacro{\linetwoy}{\lineoney-\linedistance}
 		\pgfmathsetmacro{\interbararrowheight}{\linedistance-\barheight}
-		\pgfmathsetmacro{\measurey}{\linetwoy}
+		\pgfmathsetmacro{\measurey}{\linetwoy-0.5*\barheight}
 
 		% level 0
 		\node[color=kitblue, minimum height=\barheight cm, text centered] at (0, \linezeroy) {Level~0};
