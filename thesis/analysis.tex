@@ -407,6 +407,101 @@ While the execution threads are running, our main thread awaits a \SI{1}{\milli\
 
 At the end, the number of copies of the \gls{AVX} code in the \texttt{LOOP\_R12\_CMP} area reflects the amount of instructions needed to cause the frequency transition.
 
+\begin{figure*}
+	\centering
+	\begin{subfigure}[b]{0.6\textwidth}
+		\begin{tikzpicture}[font=\scriptsize]
+		\sffamily
+		\pgfmathsetmacro{\levelheight}{0.2}
+		\pgfmathsetmacro{\linelength}{3}
+		\pgfmathsetmacro{\legendbarlength}{0.3}
+		\pgfmathsetmacro{\barlength}{1.5}
+
+		% legend
+		\draw[fill=kitgreen, color=kitgreen] (-2.5, 1.6) rectangle ++(\legendbarlength cm, \levelheight cm);
+		\node[minimum height=\levelheight cm, text centered, anchor=west] at (-2.15, 1.7) {AVX};
+
+		\draw[fill=kitbrown, color=kitbrown] (-2.5, 0.9) rectangle ++(\legendbarlength cm, \levelheight cm);
+		\node[minimum height=\levelheight cm, text centered, anchor=west] at (-2.15, 1) {Scalar};
+
+		\node[color=kityellow, align=center] at (-2.35, 0.3) {\large\Lightning};
+		\node[minimum height=\levelheight cm, text centered, anchor=west] at (-2.15, 0.3) {Interrupt};
+
+		% level 0
+		\node[color=kitblue, minimum height=\levelheight cm, text centered] at (0, 1) {Level~0};
+		\draw[color=kitdarkgrey] (0.6, 1) -- ++(\linelength cm,0);
+
+		% level 1
+		\node[color=kitblue, minimum height=\levelheight cm, text centered] at (0, 0.3) {Level~1};
+		\draw[color=kitdarkgrey] (0.6, 0.3) -- ++(\linelength cm,0);
+
+		% bars and transitions
+		\draw[<-] (0.7, 1.1) -- ++(0, 0.2);
+		\draw[fill=kitgreen, color=kitgreen] (0.7, 0.9) rectangle ++(0.6 cm, \levelheight cm);
+		\draw[fill=kitbrown, color=kitbrown] (1.3, 0.9) rectangle ++(0.9 cm, \levelheight cm);
+		\draw[->] (2.2, 0.9) -- ++(0, -0.6) node[pos=0.5, anchor=west] {\large\color{kityellow}\Lightning};
+		\draw[draw=none] (0.7, 0.9) rectangle ++(\barlength cm, \levelheight cm) node[pos=0.5, align=center, color=black, font=\tiny] {\texttt{LOOP\_R12\_CMP}};
+
+		\draw[decorate, decoration={brace, amplitude=3pt, mirror}] (0.7, 0.3) -- ++(0.6 cm,0) node[pos=0.5, anchor=north, yshift=-0.1cm, align=center] {measure \\ instructions};
+		\end{tikzpicture}
+		\caption{Level~1}
+	\end{subfigure}%
+	\begin{subfigure}[b]{0.4\textwidth}
+		\begin{tikzpicture}[font=\scriptsize]
+		\sffamily
+		\pgfmathsetmacro{\linelength}{4.2}
+		\pgfmathsetmacro{\barlength}{1.5}
+		\pgfmathsetmacro{\barheight}{0.2}
+		\pgfmathsetmacro{\linemargin}{0.6}
+		\pgfmathsetmacro{\linepadding}{0.1}
+		\pgfmathsetmacro{\linedistance}{0.7}
+		\pgfmathsetmacro{\linezeroy}{1}
+		\pgfmathsetmacro{\lineoney}{\linezeroy-\linedistance}
+		\pgfmathsetmacro{\linetwoy}{\lineoney-\linedistance}
+		\pgfmathsetmacro{\interbararrowheight}{\linedistance-\barheight}
+		\pgfmathsetmacro{\measurey}{\linetwoy}
+
+		% level 0
+		\node[color=kitblue, minimum height=\barheight cm, text centered] at (0, \linezeroy) {Level~0};
+		\draw[color=kitdarkgrey] (\linemargin, \linezeroy) -- ++(\linelength cm,0);
+
+		% level 1
+		\node[color=kitblue, minimum height=\barheight cm, text centered] at (0, \lineoney) {Level~1};
+		\draw[color=kitdarkgrey] (\linemargin, \lineoney) -- ++(\linelength cm,0);
+
+		% level 2
+		\node[color=kitblue, minimum height=\barheight cm, text centered] at (0, \linetwoy) {Level~2};
+		\draw[color=kitdarkgrey] (\linemargin, \linetwoy) -- ++(\linelength cm,0);
+
+		% bars and transitions
+		\pgfmathsetmacro{\baronex}{\linemargin+\linepadding}
+		\pgfmathsetmacro{\baroney}{\linezeroy-0.5*\barheight}
+		\draw[fill=kitgreen, color=kitgreen] (\baronex, \baroney) rectangle ++(\barlength cm, \barheight cm) node[pos=0.5, align=center, color=black, font=\tiny] {\texttt{LOOP\_AVX}};
+
+		\pgfmathsetmacro{\bartwox}{\baronex+\barlength}
+		\pgfmathsetmacro{\bartwoy}{\lineoney-0.5*\barheight}
+		\draw[fill=kitgreen, color=kitgreen] (\bartwox, \bartwoy) rectangle ++(0.6 cm, \barheight cm);
+		\draw[fill=kitbrown, color=kitbrown] (\bartwox+0.6, \bartwoy) rectangle ++(0.9 cm, \barheight cm);
+		\draw[draw=none] (\bartwox, \bartwoy) rectangle ++(\barlength cm, \barheight cm) node[pos=0.5, align=center, color=black, font=\tiny] {\texttt{LOOP\_R12\_CMP}};
+
+		\pgfmathsetmacro{\barthreex}{\bartwox+\barlength}
+		\pgfmathsetmacro{\barthreey}{\linetwoy-0.5*\barheight}
+
+		\pgfmathsetmacro{\arrowoney}{\baroney+\barheight}
+		\draw[<-] (\baronex, \arrowoney) -- ++(0, 0.2);
+
+		\draw[->, anchor=east] (\bartwox, \baroney) -- ++(0, -\interbararrowheight cm) node[pos=0.5, anchor=west] {\large\color{kityellow}\Lightning};
+
+		\draw[->, anchor=east] (\barthreex, \bartwoy) -- ++(0, -0.6 cm) node[pos=0.5, anchor=west] {\large\color{kityellow}\Lightning};
+
+		\draw[decorate, decoration={brace, amplitude=3pt, mirror}] (\bartwox, \measurey) -- ++(0.6 cm,0) node[pos=0.5, anchor=north, yshift=-0.1cm, align=center] {measure \\ instructions};
+		\end{tikzpicture}
+		\caption{Level~2}
+	\end{subfigure}
+	\caption{A certain amount of \gls{AVX} instructions is required to actually trigger frequency switches. The \texttt{REQUIRED\_INSTRUCTIONS} mode measures how many are precisely needed.}
+	\label{fig:analysis:design:measurementmodes:nonavxtime}
+\end{figure*}
+
 \section{Results}
 \label{sec:analysis:results}
 
