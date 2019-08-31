@@ -33,7 +33,7 @@ As described in \Cref{sec:analysis}, our analysis framework does not support run
 \subsubsection{Huge pages in the analysis user-space component}
 \label{sec:conclusion:futurework:hugepages}
 
-In \Cref{sec:analysis:design:userspace} we described how cache coherency effects impacted the results of our analysis framework when run on multiple cores with many pages, each \SI{4}{\kibi\byte} in size. We alleviated the impact by using less pages and instead having a jump at the end to make them loop. However, this theoretically introduces small inaccuracies to the results as the instruction stream becomes slightly heterogeneous. Modern x86 processors alternatively also support pages that are \SI{2}{\mebi\byte} large \cite{intelsdmsysprogguide}, which may be a viable alternative to improve the accuracy of our results.
+In \Cref{sec:analysis:design:userspace} we described how cache coherency effects impacted the results of our analysis framework when run on multiple cores with many pages, each \SI{4}{\kibi\byte} in size. We alleviated the impact by using less pages and instead having a jump at the end to make them loop. However, this theoretically introduces small inaccuracies to the results as the instruction stream becomes slightly heterogeneous. Modern \gls{x86} processors alternatively also support pages that are \SI{2}{\mebi\byte} large \cite{intelsdmsysprogguide}, which may be a viable alternative to improve the accuracy of our results.
 
 \subsubsection{Instruction mixtures}
 \label{sec:conclusion:futurework:mixtures}
