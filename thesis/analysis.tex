@@ -512,25 +512,23 @@ We use the described analysis framework to conduct measurements with several dif
 \subsection{System Setup}
 \label{sec:analysis:results:systemsetup}
 
-To execute our analysis tasks, we used an Intel Core i9-7940X processor which features 14 physical cores with twofold \gls{SMT} running at a nominal base frequency\footnote{Note that the base frequency equals the \gls{TSC}'s frequency \cite{intelsdmsysprogguide}.} of \SI{3.1}{\giga\hertz} with a maximum turbo frequency of \SI{4.3}{\giga\hertz} \cite{intel7940x}. Additionally, the chip supports \textit{Intel Turbo Boost Max Technology 3.0}, essentially meaning that two cores may operate at a higher turbo frequency, namely \SI{4.4}{\giga\hertz}. These cores are selected based on their electrical and thermal properties during the manufacturing process \cite{intelxeonscalabledeepdive} -- this technique is otherwise also known as \textit{speed binning} \cite{lopata2012speed}. The chip's nominal \gls{TDP} is specified at \SI{165}{\watt}, and as such, this is the maximum power consumption the chip will sustain over long time periods.
+We performed our analysis on an Intel Core i9-7940X processor which features 14 physical cores with twofold \gls{SMT}, running at a nominal base frequency\footnote{Note that the base frequency equals the \gls{TSC}'s frequency \cite{intelsdmsysprogguide}.} of \SI{3.1}{\giga\hertz} with a maximum turbo frequency of \SI{4.3}{\giga\hertz} \cite{intel7940x}. Additionally, the chip supports \textit{Intel Turbo Boost Max Technology 3.0}, essentially meaning that two specific cores may operate at a higher turbo frequency, in this case \SI{4.4}{\giga\hertz}. These cores are selected based on their electrical and thermal properties during the manufacturing process \cite{intelxeonscalabledeepdive} -- this technique is otherwise also known as \textit{speed binning} \cite{lopata2012speed}. The chip's nominal \gls{TDP} is specified at \SI{165}{\watt}, which is the maximum power consumption the chip will sustain over long time periods.
 
-This \gls{CPU} is based on the \textit{Skylake (Server)} microarchitecture, the first \gls{x86} implementation featuring support for the \gls{AVX-512} extension \cite{intelxeonscalabledeepdive}, making it one of the oldest processors that expose the \gls{AVX} reclocking issue for heterogeneous workloads. However, not all \glspl{CPU} built with this microarchitecture feature the same amount of \SI{512}{\bit}-vector execution units: some have two, others only one. The i9-7940X used here has two.
+This \gls{CPU} is based on the \textit{Skylake (Server)} microarchitecture, the first \gls{x86} implementation featuring support for the \gls{AVX-512} extension \cite{intelxeonscalabledeepdive}, making it one of the oldest processors that expose the \gls{AVX} reclocking issue for heterogeneous workloads. However, not all \glspl{CPU} built with this microarchitecture feature the same number of \SI[number-unit-product=-]{512}{\bit} vector execution units: some have two, others only one. The i9-7940X used here has two.
 
-The processor was equipped on an ASUS TUF X299 MARK 2 motherboard along with \SI{32}{\gibi\byte} of DDR4 system memory operating at a frequency of \SI{2666}{\mega\hertz} and a \gls{NVMe} \acrlong{SSD}. The motherboard was not chosen arbitrarily: being designed for the needs of the overclocking community, it -- unlike most other motherboards for this platform -- allows to customize the frequency targets for \gls{AVX}-induced reclocking in its \gls{UEFI}'s configuration menu. For this analysis, the offsets were configured to 3 and 7 for turbo license levels 1 and 2, respectively, resulting in target frequencies of \SI{3.4}{\giga\hertz} and \SI{2.8}{\giga\hertz}.
+The processor was installed on an ASUS TUF X299 MARK 2 motherboard along with \SI{32}{\gibi\byte} of DDR4 system memory operating at a frequency of \SI{2666}{\mega\hertz} and a \gls{NVMe} \acrlong{SSD}. The motherboard was not chosen arbitrarily: being designed for the needs of the overclocking community, it -- unlike most other motherboards for this platform -- allows to customize the frequency targets for \gls{AVX}-induced reclocking in its \gls{UEFI}'s configuration menu. For this analysis, the frequency offsets were configured to 3 and 7 for turbo license levels 1 and 2, respectively, resulting in target frequencies of \SI{3.4}{\giga\hertz} and \SI{2.8}{\giga\hertz}.
 
-We opted to use Fedora 29 (Server Edition) as operating system with a custom-built \gls{Linux} 5.1.0 kernel and glibc version 2.28-33. The kernel and all of our own code were compiled using GCC 8.3.1-2 with the default \texttt{-O2} optimization level.
-
-In order to minimize overhead and latencies caused by context switches from user-space to kernel-space and vice versa, we disabled all mitigations provided by the \gls{Linux} kernel for hardware vulnerabilities found in recent \glspl{CPU} (e.g., \textsc{Spectre} and \textsc{Meltdown}) as well as \gls{KASLR}.
+We opted to use Fedora 29 (Server Edition) as the operating system with a custom-built \gls{Linux} 5.1.0 kernel and glibc version 2.28-33. The kernel and all of our own code were compiled using GCC 8.3.1-2 with the default \texttt{-O2} optimization level. To minimize overhead and latencies caused by context switches from user-space to kernel-space and vice versa, we disabled all mitigations provided by the \gls{Linux} kernel for hardware vulnerabilities found in recent \glspl{CPU} (e.g., Spectre and Meltdown) as well as \gls{KASLR}. This improves the quality of our results as we only want to measure hardware behavior, and therefore want to avoid software overhead as much as time.
 
 \subsection{Tested Instructions}
 \label{sec:analysis:results:testedinstructions}
 
-In order to create a precise model of the \gls{AVX} reclocking algorithm as it was implemented by Intel, we want to conduct our measurements with different kinds of \gls{AVX} instructions to find possible differences in the behavior. Note that we only tested homogeneous loads and did not run any tests with heterogeneous mixtures of different instruction classes. This remains as future work.
+Different instructions cause different switching activity and therefore need different amounts of energy. In order to create a precise model of the \gls{AVX} reclocking algorithm as it was implemented by Intel, we want to conduct our measurements with different kinds of \gls{AVX} instructions to find possible differences in the behavior -- especially with regard to what is documented. Note that we only tested homogeneous loads and did not run any tests with heterogeneous mixtures of different instruction classes. Characterizing the frequency scaling behavior for these remains future work.
 
 We tried to select both floating-point and integer operations that reflect the \enquote{heavy} and \enquote{light} instruction types as defined in Intel's optimization manual \cite{inteloptimizationmanual} as well as instructions we guess to be implemented differently in the hardware's execution units. Consequently, we chose the following subset of \gls{AVX} instructions for our measurements (as obtained from Intel's manual for software developers \cite{intelsdminstructionreference}):
 
 \begin{itemize}
-	\item \texttt{vfmaddsub132pd} (double-precision) and \texttt{vfmaddsub132ps} (single-precision): these are floating-point \gls{FMA} instructions that alternatingly add and subtract the values from a third vector after multiplying the values from two other vectors. I.e., for input vectors $a$, $b$ and $c$, they calculate the result vector $r$ according to the following rule:
+	\item \texttt{vfmaddsub132pd} (double-precision) and \texttt{vfmaddsub132ps} (single-precision) are floating-point \gls{FMA} instructions that alternatingly add and subtract the values from a third vector after multiplying the values from two other vectors. I.e., for input vectors $a$, $b$ and $c$, they calculate the result vector $r$ according to the following rule:
 	\begin{displaymath}
 		\begin{pmatrix}
 		r_1 \\
@@ -546,9 +544,9 @@ We tried to select both floating-point and integer operations that reflect the \
 		\dots
 		\end{pmatrix}
 	\end{displaymath}
-	\item \texttt{vmulpd} (double-precision) and \texttt{vmulps} (single-precision): those instructions simply calculate the products of all corresponding floating-point members from two input vectors.
-	\item \texttt{vpmullq}: multiplies corresponding \SI{64}{\bit} integers from two input vectors into \SI{128}{\bit} intermediate results and stores the lower \SI{64}{\bit}s of each in the target result vector.
-	\item \texttt{vpackssdw}: this instruction merges two vectors with signed \SI{32}{\bit} integers into one vector consisting of signed \SI{16}{\bit} integers by handling overflow conditions via saturation arithmetic, i.e., for values larger than $32767$ ($=2^{15}-1$) or smaller than $-32768$ ($=-2^{15}$), the conversion results in these extreme values. In mathematical terms, the operation may be described as follows for input vectors $a$, $b$ and result vector $r$:
+	\item \texttt{vmulpd} (double-precision) and \texttt{vmulps} (single-precision) simply calculate the products of all corresponding floating-point members from two input vectors.
+	\item \texttt{vpmullq} multiplies corresponding \SI[number-unit-product=-]{64}{\bit} integers from two input vectors into \SI[number-unit-product=-]{128}{\bit} intermediate results and stores the lower \SI{64}{\bit}s of every intermediate result in the target result vector.
+	\item \texttt{vpackssdw} merges two vectors with signed \SI[number-unit-product=-]{32}{\bit} integers into one vector consisting of signed \SI[number-unit-product=-]{16}{\bit} integers by handling overflow conditions via saturation arithmetic, i.e., for values larger than $32767$ ($=2^{15}-1$) or smaller than $-32768$ ($=-2^{15}$), the conversion results in these extreme values. In mathematical terms, the operation may be described as follows for input vectors $a$, $b$ and result vector $r$:
 		\begin{displaymath}
 		\forall i \in \{1,\dots,|a|\} \cap \mathbb{N}\colon r_i \coloneqq saturate(a_i), r_{|a|+i} \coloneqq saturate(b_i)
 		\end{displaymath}
@@ -561,8 +559,8 @@ We tried to select both floating-point and integer operations that reflect the \
 		\end{cases}
 		\end{displaymath}
 		Note that $|a| = |b|$ and $|r| = |a| + |b|$.
-	\item \texttt{vpaddsw}: adds signed \SI{16}{\bit} integers from two input vectors using saturation arithmetic as described above.
-	\item \texttt{vpmaddwd}: an \gls{FMA}-style operation that first multiplies corresponding signed \SI{16}{\bit} integers from two input vectors, thereby creating an equal amount of \SI{32}{\bit} temporary results. Afterwards, the adjacent results are added together to generate the result vector. For input vectors $a$ and $b$, this is the operation executed to obtain the result vector $r$:
+	\item \texttt{vpaddsw} adds signed \SI[number-unit-product=-]{16}{\bit} integers from two input vectors using saturation arithmetic as described above.
+	\item \texttt{vpmaddwd} is an \gls{FMA}-style operation that first multiplies corresponding signed \SI[number-unit-product=-]{16}{\bit} integers from two input vectors, thereby creating an equal amount of \SI[number-unit-product=-]{32}{\bit} temporary results. Afterwards, the adjacent results are added together to generate the result vector. For input vectors $a$ and $b$, this is the operation executed to obtain the result vector $r$:
 		\begin{displaymath}
 		\begin{pmatrix}
 		r_1 \\
@@ -578,7 +576,7 @@ We tried to select both floating-point and integer operations that reflect the \
 		\end{displaymath}
 \end{itemize}
 
-We wrote \gls{ELF} sections for our user-space component (as described in \Cref{sec:analysis:design:userspace}) containing assembly code for all of these instructions in two variants with \SI{256}{\bit} \texttt{YMM} and \SI{512}{\bit} \texttt{ZMM} registers, respectively. Additionally, for each variant, there are two versions: an \enquote{unrolled} one and another non-\enquote{unrolled} version. The non-unrolled ones simply contain a single instruction using the first three registers, e.g.:
+We wrote \gls{ELF} sections for our user-space component (as described in \Cref{sec:analysis:design:userspace}) containing assembly code for all of these instructions in two variants with \SI[number-unit-product=-]{256}{\bit} \texttt{YMM} and \SI[number-unit-product=-]{512}{\bit} \texttt{ZMM} registers, respectively. Additionally, for each variant, there are two versions: an \enquote{unrolled} one and another non-\enquote{unrolled} version. The non-unrolled ones simply contain a single instruction using the first three registers, e.g.:
 
 \begin{center}
 	\begin{minted}{gas}
@@ -586,7 +584,7 @@ We wrote \gls{ELF} sections for our user-space component (as described in \Cref{
 	\end{minted}
 \end{center}
 
-By constantly keeping to execute the same instruction with the same operands, we create some artificial register pressure that prevents a core's scheduler from maximizing utilization of the two \SI{512}{\bit}-vector units available in the execution engine. The unrolled versions, on the other side, alleviate this pressure by repeating the same instruction, but with different register operands:
+By constantly executing the same instruction with the same operands, we create some artificial register pressure that prevents a core's scheduler from maximizing utilization of the two \SI[number-unit-product=-]{512}{\bit} vector units available in the execution engine. The unrolled versions, on the other side, alleviate this pressure by repeating the same instruction, but with different register operands:
 
 \begin{center}
 	\begin{minted}{gas}
@@ -597,7 +595,7 @@ By constantly keeping to execute the same instruction with the same operands, we
 	\end{minted}
 \end{center}
 
-Every unrolled section contains the same instruction repeated 31 times, always using \texttt{\%zmm0}/\texttt{\%ymm0} for the first two operands and \texttt{\%zmm\{1-31\}}/\texttt{\%ymm\{1-31\}} as last operand, thereby, we exhaustively make use of all 32 \texttt{ZMM}/\texttt{YMM} architectural registers available on \gls{AVX-512}-capable processors.
+Every unrolled section contains the same instruction repeated 31 times, always using \texttt{\%zmm0}/\texttt{\%ymm0} for the first two operands and \texttt{\%zmm\{1-31\}}/\texttt{\%ymm\{1-31\}} as last operand. Thereby, we exhaustively make use of all 32 \texttt{ZMM}/\texttt{YMM} architectural registers available on \gls{AVX-512}-capable processors \cite{intelsdmbasicarch}.
 
 \subsection{Downclocking}
 \label{sec:analysis:results:downclocking}
@@ -614,9 +612,7 @@ Coarsely, we found the \gls{CPU} to generally run through the following steps fo
 
 This already contains our first insight: even for \gls{AVX-512} instructions that Intel defines to be \enquote{heavy}, the processor will first switch to license level~1 and spend some time in that mode before performing another frequency shift to level~2 -- Intel does not mention this in their optimization manual \cite{inteloptimizationmanual}. This information is easily obtained by executing the \hyperref[sec:analysis:design:measurementmodes:downclock]{\texttt{DOWNCLOCK}} mode twice with both levels as targets -- if the \glspl{CPU} did not make this intermediate step, the test would simply hang when executed with level~1 as target as this level would never be reached.
 
-Similarly, we can reach another interesting insight: even \gls{AVX-512} heavy instructions do not always trigger a switch to level~2. We observed this behavior with the \texttt{vfmaddsub132pd} instruction, for which only the unrolled version (i.e., the one without register pressure) will ever reach level~2. The very same behavior exists with the \SI{256}{\bit} version of this instruction, too: the core only switches to level~1 when unrolled.
-
-We can imagine two different factors that could potentially influence this decision: the load on the core's \gls{AVX} units and the register pressure itself.
+Similarly, we can confirm an observation previously made by \citeauthor{lemire2018avx512} \cite{lemire2018avx512}: even \gls{AVX-512} heavy instructions do not always trigger a switch to level~2. We observed this behavior with the \texttt{vfmaddsub132pd} instruction, for which only the unrolled version (i.e., the one without register pressure) will ever reach level~2. The very same behavior exists with the \SI{256}{\bit} version of this instruction, too: the core only switches to level~1 when unrolled. We can imagine two different factors that could potentially influence this decision: the load on the core's \gls{AVX} units and the register pressure itself.
 
 \begin{figure}
 	\begin{tikzpicture}[trim axis left]
@@ -642,21 +638,21 @@ We can imagine two different factors that could potentially influence this decis
 	\label{fig:analysis:results:downclocking:avx_dp_fma_512_unrolled_l1_1cpus_downclock+avx_dp_fma_512_l1_1cpus_downclock:throughput}
 \end{figure}
 
-Before the first frequency reduction from level~0 to level~1 happens, we find that the instruction throughput (\gls{IPC}) of the \SI{512}{\bit} variant is precisely doubled from $0.21$ to $0.42$ on average with the unrolled version compared to the non-unrolled implementation, as depicted in \Cref{fig:analysis:results:downclocking:avx_dp_fma_512_unrolled_l1_1cpus_downclock+avx_dp_fma_512_l1_1cpus_downclock:throughput}.
+Before the first frequency reduction from level~0 to level~1 happens, we find that the instruction throughput (\acrlong{IPC}, \acrshort{IPC}\glsunset{IPC}) of the \SI[number-unit-product=-]{512}{\bit} variant is precisely doubled from $0.21$ to $0.42$ on average with the unrolled version compared to the non-unrolled implementation, as depicted in \Cref{fig:analysis:results:downclocking:avx_dp_fma_512_unrolled_l1_1cpus_downclock+avx_dp_fma_512_l1_1cpus_downclock:throughput}.
 
 This is expected: as described in \Cref{sec:analysis:results:testedinstructions}, the \gls{CPU} we used for our tests features two \gls{AVX-512} units per core, and as such, when no register pressure prevents a core from paralleling consecutive instructions, it can make full utilization of both units. However, we also found that the cores always run roughly equal amounts of instructions through both units, even in the non-unrolled case. Most likely, Intel's scheduler uses a simple round-robin algorithm to assign \glspl{microinst} to the units. This is a sign that the load on the units is not the determining factor: in the non-unrolled case the units take turns and each one stays unloaded only for a few cycles at a time.
 
-On the other side, the theory of the register pressure being the culprit here is supported by a patent on local power gating in processors published by Intel \cite{bonen2016performing}: here, Intel describes a technique to dynamically cut and restore power to both vector units and vector registers upon demand to save energy, which is likely implemented in our system's processor as described. Notably, these are controlled independent of each other and it is also noted that the \texttt{vzeroupper} instruction directly impacts the power gating behavior. This instruction zeroes the upper \SI{384}{\bit}s of each architectural \SI{512}{\bit} vector register \cite{intelsdminstructionreference}. Indeed, if we explicitly set the \SI{512}{\bit} register \texttt{ZMM0} to a value before starting execution, we find that heavy \SI{256}{\bit} (i.e., \gls{AVX2}) vector instructions -- which would normally only cause switches to level~1 -- suddenly trigger frequency switches to level~2, too, but not anymore if we additionally execute \texttt{vzeroupper} after setting \texttt{ZMM0}. This is not documented in Intel's description of the reclocking algorithm, but hints that the register usage directly impacts the turbo license level selection in addition to the types of the executed instructions.
+In addition, the theory of the register pressure being the culprit here is supported by a patent on local power gating in processors published by Intel \cite{bonen2016performing}: here, Intel describes a technique to dynamically cut and restore power to vector units as well as vector registers upon demand to save energy, which our system's processor likely implements as described. Notably, execution units and registers are controlled independent of each other and it is also noted that the \texttt{vzeroupper} instruction directly impacts the power gating behavior. This instruction zeroes the upper \SI{384}{\bit}s of each architectural \SI[number-unit-product=-]{512}{\bit} vector register \cite{intelsdminstructionreference}. Indeed, if we explicitly set the \SI[number-unit-product=-]{512}{\bit} register \texttt{ZMM0} to a non-zero value before starting execution, we find that heavy \SI[number-unit-product=-]{256}{\bit} (i.e., \gls{AVX2}) vector instructions -- which would normally only cause switches to level~1 -- suddenly trigger frequency switches to level~2, too, but only if we do not additionally execute \texttt{vzeroupper} after setting \texttt{ZMM0}. This is not documented in Intel's description of the reclocking algorithm, but hints that the register usage directly impacts the turbo license level selection in addition to the types of the executed instructions.
 
 Apart from this discrepancy, we found that Intel's description of the instruction types and their associated turbo license levels holds true for the instructions we selected for testing. Now that we know the steps for frequency reductions, the next logical step is to find out when each of them occurs, what is required to trigger them and how much time a core spends in each state.
 
-In \Cref{sec:analysis:design:measurementmodes:prethrottlethroughput}, we described the implementation of the \texttt{PRE\_THROTTLE\_TIME} measurement mode, designed to find out how long \gls{AVX} instructions may be executed before the \acrlong{OoO} engine is throttled with the added bonus of being able to measure what throughput could theoretically be achieved if there was no frequency reduction at all.
+In \Cref{sec:analysis:design:measurementmodes:prethrottlethroughput}, we described the implementation of the \texttt{PRE\_THROTTLE\_TIME} measurement mode, designed to find out how many \gls{AVX} instructions may be executed before the \acrlong{OoO} engine is throttled. Additionally, we wanted to use it to measure what throughput could theoretically be achieved if there was no frequency reduction at all.
 
 The answer here, however, is very simple: in all tested cases, the throttling occurs immediately after execution of the first instruction has completed -- no matter what instruction is tested, how many cores are used or whether pre-throttling is enabled. This also means that we are unable to measure the theoretically achievable throughput here: with a duration of just one instruction, no reliable numbers may be obtained.
 
 Next, we are interested in the amount of instructions required to eventually trigger a switch to level~1. This is what the \hyperref[sec:analysis:design:measurementmodes:nonavxtime]{\texttt{REQUIRED\_INSTRUCTIONS}} measurement mode was built for: it incrementally builds and executes \gls{AVX} code with more instructions until a license level switch can be observed within a time window after an execution iteration.
 
-Here, we indeed found interesting differences between different instruction types: all \SI{512}{\bit} ones require just exactly one instruction to be executed and the core is going to switch to level~1. For \SI{256}{\bit} instructions, however, a quite different picture emerges: \Cref{fig:analysis:results:downclocking:avx_dp_fma_256_unrolled_l1_1cpus_non_avx_time:avx_instructions} depicts the required amount of instructions exemplary for the \SI{256}{\bit} \texttt{vfmaddsub132pd} unrolled case, without pre-throttling and with one core. The result varies between a minimum of $3317$ and a maximum of $30845$ instructions while the average and the median are set rather near each other, at $12982.8$ and $12431$, respectively. \Cref{fig:analysis:results:downclocking:avx_dp_fma_256_unrolled_l1_1cpus_non_avx_time:avx_instructions:histogram} shows the same data, plotted as a histogram. It becomes clearly visible that the median is far nearer to the minimum than it is to the maximum.
+Here, we indeed found interesting differences between different instruction types: all \SI[number-unit-product=-]{512}{\bit} instructions trigger a switch to level~1 after exactly one executed instruction. For \SI[number-unit-product=-]{256}{\bit} instructions, however, a quite different picture emerges: \Cref{fig:analysis:results:downclocking:avx_dp_fma_256_unrolled_l1_1cpus_non_avx_time:avx_instructions} exemplary depicts the required amount of instructions exemplary for the \SI{256}{\bit} \texttt{vfmaddsub132pd} unrolled case, without pre-throttling and with one core executing \gls{AVX} instructions. The result varies between a minimum of $3317$ and a maximum of $30845$ instructions while the average and the median are set rather near each other, at $12982.8$ and $12431$, respectively. \Cref{fig:analysis:results:downclocking:avx_dp_fma_256_unrolled_l1_1cpus_non_avx_time:avx_instructions:histogram} shows the same data, plotted as a histogram. It becomes clearly visible that the median is far nearer to the minimum than it is to the maximum.
 
 \begin{figure}
 	\begin{tikzpicture}[trim axis left]
@@ -678,7 +674,7 @@ Here, we indeed found interesting differences between different instruction type
 		\addplot[only marks, color=kitblue] table {plots/avx_dp_fma_256_unrolled_l1_1cpus_non_avx_time_avx_instructions.csv};
 	\end{axis}
 	\end{tikzpicture}
-	\caption{Required \SI{256}{\bit} \texttt{vfmaddsub132pd} instructions to trigger a turbo license switch to level~1. Unlike with \SI{512}{\bit} instructions, the amount varies a lot.}
+	\caption{Required \SI[number-unit-product=-]{256}{\bit} \texttt{vfmaddsub132pd} instructions to trigger a turbo license switch to level~1. Unlike with \SI{512}{\bit} instructions, the amount varies a lot.}
 	\label{fig:analysis:results:downclocking:avx_dp_fma_256_unrolled_l1_1cpus_non_avx_time:avx_instructions}
 \end{figure}
 
@@ -718,17 +714,15 @@ Here, we indeed found interesting differences between different instruction type
 
 We find that average and median values rise when executing the test with more cores. While this may seem surprising at first glance, it is expected: when run with multiple cores, the test only ends if a frequency switch is triggered on all cores. Therefore, given the high variance of the results, it becomes less likely that all cores reach a frequency switch with less instructions.
 
-While pre-throttling does not seem to have any effect that can not be attributed to statistical noise, disabling turbo frequencies does have one: we can still observe a high variance within the results, but all statistic measures are \emph{lower}: with a single core, we find a minimum of $527$, a maximum of $21793$, $8642.49$ on average, and a median of $8137.5$. This is intriguing as one would expect a frequency drop to be less necessary when starting off a lower base frequency. We can not be sure of an explanation for this, however, this observation may hint that voltage stability is a crucial factor here: in the previously cited patent \cite{bonen2016performing}, Intel notes that a voltage drop may occur due to rising electrical resistance upon powering the vector units and that a detector for this situation is in place. Given that, at a lower frequency, the core also runs at a lower voltage, it seems plausible that the voltage drops below the critical threshold earlier as the added resistance is the same.
+We implemented pre-throttling mode to be able to test what happens when additional load is created when a further core is utilized in an environment where other cores are already loaded, contrary to the default mode where the \gls{AVX} workload is started on all cores at the same time. However, pre-throttling does not seem to have any effect that can not be attributed to statistical noise. Nevertheless, disabling turbo frequencies does have one: we can still observe a high variance within the results, but all statistic measures are \emph{lower}: with a single core, we find a minimum of $527$, a maximum of $21793$, $8642.49$ on average, and a median of $8137.5$. This is intriguing as one would expect a frequency drop to be less necessary when starting off a lower base frequency. We can not be sure of an explanation for this, however, this observation may hint that voltage stability is a crucial factor here: in the previously cited patent \cite{bonen2016performing}, Intel notes that a voltage drop may occur due to falling electrical resistance (and in turn, rising current) upon powering the vector units and that a detector for this situation is in place. Given that, at a lower frequency, the core also runs at a lower voltage, it seems plausible that the voltage drops below the critical threshold earlier as the subtracted resistance is the same regardless of voltage and frequency.
 % todo this theory may be verified by testing different chips of the same model and perhaps also applying higher Vcore
-
-With these results we have fully established all conditions required for \gls{AVX}-induced frequency reductions to level~1, now we are interested in the time required for the actual switch.
 
 \begin{figure}
 	\begin{tikzpicture}[trim axis left]
 	\sffamily
 	\begin{axis}[
 		xlabel={Runs ($n=1000$)},
-		ylabel={\si{\micro\second}},
+		ylabel={Downclocking Time (\si{\micro\second})},
 		scale only axis,
 		width=\textwidth,
 		height=5cm,
@@ -743,7 +737,7 @@ With these results we have fully established all conditions required for \gls{AV
 	\addplot[only marks, color=kitblue] table {plots/avx_dp_fma_512_l1_1cpus_downclock_time.csv};
 	\end{axis}
 	\begin{axis}[
-		ylabel={\si{\micro\second}},
+		ylabel={Downclocking Time (\si{\micro\second})},
 		scale only axis,
 		width=\textwidth,
 		height=5cm,
@@ -757,18 +751,18 @@ With these results we have fully established all conditions required for \gls{AV
 	\addplot[color=kitgreen, domain=0:1000, thick] {24.593225806452} node[pos=0, below=0.7cm, anchor=west] {median = \SI{24.59}{\micro\second}};
 	\end{axis}
 	\end{tikzpicture}
-	\caption{Downclocking time to level~1 for the \SI{512}{\bit} \texttt{vfmaddsub132pd} instruction. The results are very homogeneous around a median of \SI{24.59}{\micro\second}.}
+	\caption{Downclocking time to level~1 for the \SI[number-unit-product=-]{512}{\bit} \texttt{vfmaddsub132pd} instruction. The results are very homogeneous around a median of \SI{24.59}{\micro\second}.}
 	\label{fig:analysis:results:downclocking:avx_dp_fma_512_l1_1cpus_downclock:time}
 \end{figure}
 
-Again, we find \SI{512}{\bit} and \SI{256}{\bit} instructions to have noticeable differences. For example, with \SI{512}{\bit} \texttt{vfmaddsub132pd} instructions executed on a single core, all results are very homogeneously distributed around a median of \SI{24.59}{\micro\second} with only a few outliers, as depicted in \Cref{fig:analysis:results:downclocking:avx_dp_fma_512_l1_1cpus_downclock:time}. There is no statistically relevant difference with other \SI{512}{\bit} instructions, however, median and deviation both rise with multiple cores: exemplarily looking at three cores (\Cref{fig:analysis:results:downclocking:avx_dp_fma_512_l1_3cpus_downclock:time}), we find the average of the median across all three cores to be at \SI{27.39}{\micro\second} -- an increase of nearly three microseconds. While the standard deviation with only one core is very low at $0.0025$, it quintuples with three cores and amounts to an average of $0.013$. Notably, this increase only happens with pre-throttling disabled. This is interesting because it tells us that the frequency is not the determining factor here: the maximum turbo frequency of a single core depends on the available electrical power budget as well as on how many cores are under load, and thus, with three cores compared to only one, each core runs at a lower frequency. If, however, the increase is not visible with pre-throttling -- i.e., when two cores are already at level~1 -- the lower frequency can not be at fault for the increased latency. A simple and plausible explanation could be that the \gls{PCU} requires more time to make its decision when more license requests are pending.
+As with these results we have fully established all conditions required for \gls{AVX}-induced frequency reductions to level~1, we are now interested in the time required for the actual switch (i.e., the time between starting execution and the moment the new frequency is applied). Again, we find \SI[number-unit-product=-]{512}{\bit} and \SI[number-unit-product=-]{256}{\bit} instructions to have noticeable differences. For example, with \SI[number-unit-product=-]{512}{\bit} \texttt{vfmaddsub132pd} instructions executed on a single core, all results are very homogeneously distributed around a median of \SI{24.59}{\micro\second} with only a few outliers, as depicted in \Cref{fig:analysis:results:downclocking:avx_dp_fma_512_l1_1cpus_downclock:time}. There is no statistically relevant difference with other \SI[number-unit-product=-]{512}{\bit} instructions. However, median and deviation both rise with multiple cores: for example, with three cores (\Cref{fig:analysis:results:downclocking:avx_dp_fma_512_l1_3cpus_downclock:time}), we find the average of the median across all three cores to be at \SI{27.39}{\micro\second} -- an increase of nearly three microseconds. Whereas the standard deviation with only one core is very low at \SI{0.0025}{\micro\second}, it quintuples with three cores and amounts to an average of \SI{0.013}{\micro\second}. Notably, this increase only happens with pre-throttling mode disabled, i.e., when only one core switches its license level, whereas the others are already running in a level with reduced frequency. This is interesting because it tells us that the frequency is not the determining factor here: the maximum turbo frequency of a single core depends on the available electrical power budget as well as on how many cores are under load, and thus, with three cores each core runs at a lower frequency, compared to when only one core is active. If, however, the increase is not visible with pre-throttling -- i.e., when two cores are already at level~1 -- the lower frequency can not be at fault for the increased latency. A simple and plausible explanation could be that the \gls{PCU} requires more time to make its decision when more license requests are pending.
 
 \begin{figure}
 	\begin{tikzpicture}[trim axis left]
 	\sffamily
 	\begin{axis}[
 		xlabel={Runs ($n=1000$)},
-		ylabel={\si{\micro\second}},
+		ylabel={Downclocking Time (\si{\micro\second})},
 		scale only axis,
 		width=\textwidth,
 		height=5cm,
@@ -785,18 +779,18 @@ Again, we find \SI{512}{\bit} and \SI{256}{\bit} instructions to have noticeable
 	\addplot[only marks, color=kityellow, mark options={scale=0.5}] table {plots/avx_dp_fma_512_l1_3cpus_downclock_time_cpu2.csv};
 	\end{axis}
 	\end{tikzpicture}
-	\caption{Downclocking time to level 1 for the \SI{512}{\bit} \texttt{vfmaddsub132pd} instruction when executed on three cores (each color represents a specific core). Compared to \Cref{fig:analysis:results:downclocking:avx_dp_fma_512_l1_1cpus_downclock:time}, median and standard deviation are higher.}
+	\caption{Downclocking time to level 1 for the \SI[number-unit-product=-]{512}{\bit} \texttt{vfmaddsub132pd} instruction when executed on three cores (each color represents a specific core). Compared to \Cref{fig:analysis:results:downclocking:avx_dp_fma_512_l1_1cpus_downclock:time}, median and standard deviation are higher.}
 	\label{fig:analysis:results:downclocking:avx_dp_fma_512_l1_3cpus_downclock:time}
 \end{figure}
 
-Looking at \SI{256}{\bit} instructions, we find that the downclocking time to level~1 is still very homogeneous across all runs, albeit a lot higher than in the \SI{512}{\bit} case. As shown in \Cref{fig:analysis:results:downclocking:avx_dp_fma_256_unrolled_l1_1cpus_downclock:time}, with  \SI{256}{\bit} \texttt{vfmaddsub132pd} instructions executed on one core, the median is at \SI{51.52}{\micro\second} -- more than doubled compared to the \SI{24.59}{\micro\second} of the \SI{512}{\bit} variant. The results do not correlate with the amount of instructions required to cause the frequency reduction previously depicted in \Cref{fig:analysis:results:downclocking:avx_dp_fma_256_unrolled_l1_1cpus_non_avx_time:avx_instructions,fig:analysis:results:downclocking:avx_dp_fma_256_unrolled_l1_1cpus_non_avx_time:avx_instructions:histogram}, which makes it seem likely that the difference in timing is induced by an algorithmic difference in the implementation.
+Looking at \SI[number-unit-product=-]{256}{\bit} instructions, we find that the downclocking time to level~1 is still very homogeneous across all runs, albeit a lot higher than in the \SI[number-unit-product=-]{512}{\bit} case. As shown in \Cref{fig:analysis:results:downclocking:avx_dp_fma_256_unrolled_l1_1cpus_downclock:time}, with  \SI[number-unit-product=-]{256}{\bit} \texttt{vfmaddsub132pd} instructions executed on one core, the median is at \SI{51.52}{\micro\second} -- more than doubled compared to the \SI{24.59}{\micro\second} of the \SI[number-unit-product=-]{512}{\bit} variant. The results do not correlate with the amount of instructions required to cause the frequency reduction previously depicted in \Cref{fig:analysis:results:downclocking:avx_dp_fma_256_unrolled_l1_1cpus_non_avx_time:avx_instructions,fig:analysis:results:downclocking:avx_dp_fma_256_unrolled_l1_1cpus_non_avx_time:avx_instructions:histogram}, which makes it seem likely that the difference in timing is induced by an algorithmic difference in the implementation.
 
 \begin{figure}
 	\begin{tikzpicture}[trim axis left]
 	\sffamily
 	\begin{axis}[
 		xlabel={Runs ($n=1000$)},
-		ylabel={\si{\micro\second}},
+		ylabel={Downclocking Time (\si{\micro\second})},
 		scale only axis,
 		width=\textwidth,
 		height=5cm,
@@ -825,7 +819,7 @@ Looking at \SI{256}{\bit} instructions, we find that the downclocking time to le
 	\addplot[color=kitgreen, domain=0:1000, thick] {51.516774193548} node[pos=0, below=2.05cm, anchor=west] {median = \SI{51.52}{\micro\second}};
 	\end{axis}
 	\end{tikzpicture}
-	\caption{Downclocking time to level 1 for the \SI{256}{\bit} \texttt{vfmaddsub132pd} instruction. This takes a lot longer than with the \SI{512}{\bit} version.}
+	\caption{Downclocking time to level 1 for the \SI[number-unit-product=-]{256}{\bit} \texttt{vfmaddsub132pd} instruction. This takes a lot longer than with the \SI[number-unit-product=-]{512}{\bit} version.}
 	\label{fig:analysis:results:downclocking:avx_dp_fma_256_unrolled_l1_1cpus_downclock:time}
 \end{figure}
 
@@ -836,7 +830,7 @@ So far we have described the frequency reduction process until level~1 is reache
 	\sffamily
 	\begin{axis}[
 	xlabel={Runs ($n=1000$)},
-	ylabel={\si{\micro\second}},
+	ylabel={Downclocking Time (\si{\micro\second})},
 	scale only axis,
 	width=\textwidth,
 	height=5cm,
@@ -876,14 +870,14 @@ Our findings about the second turbo license switch from level~1 to level~2 (wher
 \subsection{Upclocking}
 \label{sec:analysis:results:upclocking}
 
-After a core's clock is reduced due to a license level transition, it runs at the lower frequency until no more heavy instructions are being executed. However, the frequency can not be raised immediately in order to avoid flapping, and thus, the core keeps executing further instructions at a lower speed for a while -- this is what essentially causes the performance issue for heterogeneous workloads that motivated this work. Further, the upclocking part of the reclocking algorithm where it is most likely to find room for possible optimizations. Therefore, the process of raising the frequency (actually, reverting the reduction) deserves particular attention. According to Intel, as cited in this chapter's \hyperref[sec:analysis]{introduction}, this generally takes about \SI{2}{\milli\second}. To verify this claim, we used our framework's \hyperref[sec:analysis:design:measurementmodes:upclock]{\texttt{UPCLOCK}} measurement mode, which executes \gls{AVX} instructions until a license level transition occurs on a given core and then keeps the core spinning in a scalar loop until it switches back to level~0.
+After a core's clock is reduced due to a license level transition, it runs at the lower frequency until no more heavy instructions are being executed. However, the frequency can not be raised immediately in order to avoid wasting time with too many frequency switches, and thus the core keeps executing further instructions at a lower speed for a while -- this is what essentially causes the performance issue for heterogeneous workloads that motivated this work. Further, the upclocking part of the reclocking algorithm where it is most likely to find room for possible optimizations. Therefore, the process of raising the frequency (actually, reverting the reduction) deserves particular attention. According to Intel, as cited in this chapter's \hyperref[sec:analysis]{introduction}, the processor generally delays increasing the frequency again by about \SI{2}{\milli\second}. To verify this claim, we used our framework's \hyperref[sec:analysis:design:measurementmodes:upclock]{\texttt{UPCLOCK}} measurement mode, which executes \gls{AVX} instructions until a license level transition occurs on a given core and then keeps the core spinning in a scalar loop until it switches back to level~0.
 
 \begin{figure}
 	\begin{tikzpicture}[trim axis left]
 	\sffamily
 	\begin{axis}[
 		xlabel={Runs ($n=1000$)},
-		ylabel={\si{\milli\second}},
+		ylabel={Upclocking Delay (\si{\milli\second})},
 		scale only axis,
 		width=\textwidth,
 		height=5cm,
@@ -912,18 +906,18 @@ After a core's clock is reduced due to a license level transition, it runs at th
 	\addplot[color=kitgreen, domain=0:1000, thick] {0.674503548387097} node[pos=0, below=0.72cm, anchor=west] {median = \SI{0.675}{\milli\second}};
 	\end{axis}
 	\end{tikzpicture}
-	\caption{Upclocking times after executing \SI{256}{\bit} \texttt{vfmaddsub132pd} instructions until level~1 is reached. Results show that it uniformly takes about \SI[quotient-mode=fraction]{2/3}{\milli\second}.}
+	\caption{Upclocking times after executing \SI[number-unit-product=-]{256}{\bit} \texttt{vfmaddsub132pd} instructions until level~1 is reached. Results show the upclocking delay to uniformly be around \SI[quotient-mode=fraction]{2/3}{\milli\second}.}
 	\label{fig:analysis:results:downclocking:avx_dp_fma_256_unrolled_l1_1cpus_upclock:time}
 \end{figure}
 
-Again using the results from the \texttt{vfmaddsub132pd} instruction as example, we find that the upclocking behavior differs between several test configurations. For the \SI{256}{\bit} unrolled version executed on a single core with pre-throttling disabled and targeting level~1, we get the results depicted in \Cref{fig:analysis:results:downclocking:avx_dp_fma_256_unrolled_l1_1cpus_upclock:time}. These are very uniformly distributed around a median of \SI{0.675}{\milli\second}. Notably, this is suspiciously near to \SI[quotient-mode=fraction]{2/3}{\milli\second}.
+Again using the results from the \texttt{vfmaddsub132pd} instruction as example, we find that the upclocking behavior differs between several test configurations. For the \SI[number-unit-product=-]{256}{\bit} unrolled version executed on a single core with pre-throttling disabled and targeting level~1, we get the results depicted in \Cref{fig:analysis:results:downclocking:avx_dp_fma_256_unrolled_l1_1cpus_upclock:time}. These are very uniformly distributed around a median of \SI{0.675}{\milli\second}. Notably, this is suspiciously near to \SI[quotient-mode=fraction]{2/3}{\milli\second}.
 
 \begin{figure}
 	\begin{tikzpicture}[trim axis left]
 	\sffamily
 	\begin{axis}[
 		xlabel={Runs ($n=1000$)},
-		ylabel={\si{\milli\second}},
+		ylabel={Upclocking Delay (\si{\milli\second})},
 		scale only axis,
 		width=\textwidth,
 		height=5cm,
@@ -952,18 +946,18 @@ Again using the results from the \texttt{vfmaddsub132pd} instruction as example,
 	\addplot[color=kitgreen, domain=0:1000, thick] {0.674378709677419} node[pos=0, below=0.4cm, anchor=west] {median = \SI{0.674}{\milli\second}};
 	\end{axis}
 	\end{tikzpicture}
-	\caption{Upclocking times after executing \SI{512}{\bit} \texttt{vfmaddsub132pd} instructions until level~1 is reached. While most runs still yield a time of \SI[quotient-mode=fraction]{2/3}{\milli\second}, some are scattered within a range up to \SI[quotient-mode=fraction]{4/3}{\milli\second}.}
+	\caption{Upclocking times after executing \SI[number-unit-product=-]{512}{\bit} \texttt{vfmaddsub132pd} instructions until level~1 is reached. While most runs still yield a time of \SI[quotient-mode=fraction]{2/3}{\milli\second}, some are scattered within a range up to \SI[quotient-mode=fraction]{4/3}{\milli\second}.}
 	\label{fig:analysis:results:downclocking:avx_dp_fma_512_unrolled_l1_1cpus_upclock:time}
 \end{figure}
 
-Looking at the very same instruction in its \SI{512}{\bit} variant under the same test conditions in \Cref{fig:analysis:results:downclocking:avx_dp_fma_512_unrolled_l1_1cpus_upclock:time}, a different picture emerges: while the median is still nearly the same at \SI{0.674}{\milli\second}, the maximum is at \SI{1.333}{\milli\second} -- about \SI[quotient-mode=fraction]{4/3}{\milli\second}. Yet again, when going to level~2, all runs are homogeneously distributed around \SI[quotient-mode=fraction]{2/3}{\milli\second}. The results are mostly the same when executed with multiple cores, save the notable exception of pre-throttling mode: in \Cref{fig:analysis:results:downclocking:avx_dp_fma_512_unrolled_l1_1cpus_upclock:time}, \SI{69.4}{\percent} of the results are below \SI{0.7}{\milli\second}. With two cores and \gls{AVX} pre-throttling enabled, as graphed in \Cref{fig:analysis:results:downclocking:avx_dp_fma_512_unrolled_l1_2cpus_pre_throttle_avx_upclock:time}, this applies to \SI{94.7}{\percent} of the runs. Similar results are obtained with more cores. 
+Looking at the very same instruction in its \SI[number-unit-product=-]{512}{\bit} variant under the same test conditions in \Cref{fig:analysis:results:downclocking:avx_dp_fma_512_unrolled_l1_1cpus_upclock:time}, a different picture emerges: while the median is still nearly the same at \SI{0.674}{\milli\second}, the maximum is at \SI{1.333}{\milli\second} -- about \SI[quotient-mode=fraction]{4/3}{\milli\second}. However, when going to level~2, all runs are again homogeneously distributed around \SI[quotient-mode=fraction]{2/3}{\milli\second}. The results are mostly the same when executed with multiple cores, save the notable exception of pre-throttling mode: in \Cref{fig:analysis:results:downclocking:avx_dp_fma_512_unrolled_l1_1cpus_upclock:time}, \SI{69.4}{\percent} of the results are below \SI{0.7}{\milli\second}. With two cores and \gls{AVX} pre-throttling enabled, as graphed in \Cref{fig:analysis:results:downclocking:avx_dp_fma_512_unrolled_l1_2cpus_pre_throttle_avx_upclock:time}, this applies to \SI{94.7}{\percent} of the runs. Similar results are obtained with more cores.
 
 \begin{figure}
 	\begin{tikzpicture}[trim axis left]
 	\sffamily
 	\begin{axis}[
 		xlabel={Runs ($n=1000$)},
-		ylabel={\si{\milli\second}},
+		ylabel={Upclocking Delay (\si{\milli\second})},
 		scale only axis,
 		width=\textwidth,
 		height=5cm,
@@ -978,8 +972,6 @@ Looking at the very same instruction in its \SI{512}{\bit} variant under the sam
 	\addplot[only marks, color=kitblue] table {plots/avx_dp_fma_512_unrolled_l1_2cpus_pre_throttle_avx_upclock_time.csv};
 	\end{axis}
 	\end{tikzpicture}
-	\caption{Upclocking times after executing \SI{512}{\bit} instructions until level~1 is reached with two cores in \gls{AVX} pre-throttle mode. }
+	\caption{Upclocking times after executing \SI[number-unit-product=-]{512}{\bit} instructions until level~1 is reached with two cores in \gls{AVX} pre-throttling mode. Compared to \Cref{fig:analysis:results:downclocking:avx_dp_fma_512_unrolled_l1_1cpus_upclock:time}, where only one core was active, the variance is a lot smaller.}
 	\label{fig:analysis:results:downclocking:avx_dp_fma_512_unrolled_l1_2cpus_pre_throttle_avx_upclock:time}
 \end{figure}
-
-Finally, in the case of \SI{512}{\bit} instructions targeting level~2, we find the data to be very much alike the \SI{256}{\bit} level~1 case: all values are located near \SI[quotient-mode=fraction]{2/3}{\milli\second} every time.
