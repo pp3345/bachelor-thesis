@@ -10,12 +10,12 @@ In said analysis we found that, for most demanding \gls{AVX} instructions, downc
 
 Although we were able to show that improved performance in heterogeneous workloads through better reclocking is theoretically possible, research on this topic is nowhere complete. In this section, we will present several ideas and open issues that may pose interesting topics for future work.
 
-\subsubsection{Alternative reclocking algorithms}
+\subsubsection{Alternative Reclocking Algorithms}
 \label{sec:conclusion:futurework:algorithms}
 
 We designed our reimplementation \textsc{avxfreq} with the goal of being able to test alternative reclocking algorithms. So far we implemented a simple design which uses oracle-style foresight to switch frequencies by having user-space programs tell the kernel whenever a phase with \gls{AVX-512} heavy instructions starts or ends. This approach allowed us to estimate what performance improvement may be possible in theoretical best case. However, of course this is not feasible for real-world application as one of the main tasks of an operating system is to hide hardware implementation details such as the need for reclocking from software. We have outlined an approach where the operating system may profile durations of different execution phases in user-space threads to make predictions about the future length of \gls{AVX} and scalar phases that may be used to estimate whether immediately raising the processor's frequency after an \gls{AVX} phase would have a positive impact on overall performance.
 
-\subsubsection{Analysis on other processors}
+\subsubsection{Analysis on Other Processors}
 \label{sec:conclusion:futurework:otherprocessors}
 
 Our analysis in \Cref{sec:analysis} was conducted using an Intel Core i9-7940X processor from the \textit{Skylake (Server)} generation. However, even though older chips from the \textit{Haswell} and \textit{Broadwell} generations only supported \gls{AVX2} and no \gls{AVX-512} \cite{intelhaswell} \cite{intelxeonscalabledeepdive}, they still reduced their frequency when executing demanding \gls{AVX2} instructions, albeit to a smaller extent. Given that we found several discrepancies in the reclocking behavior between what Intel claims in their manuals and what we saw in our analysis results, it may be plausible that Intel's implementation has changed between \textit{Haswell} and \textit{Skylake} and their documentation is simply outdated. Running our tests with a \textit{Haswell} processor could therefore yield interesting insights on why Intel has chosen to implement reclocking the way they did in \textit{Skylake}.
@@ -24,33 +24,33 @@ Further, not all \textit{Skylake (Server)} cores are equally equipped with the s
 
 Finally, towards the end of 2019, \textit{Icelake} processors will be the first in the consumer desktop and mobile markets to have \gls{AVX-512} \cite{thicelake}. As Intel makes this instruction set available to a broader range of customers and given that \textit{Icelake} will be the first large microarchitectural overhaul since \textit{Skylake} along with a leap in process technology, they possibly have made changes to their reclocking algorithm. Again, it may be interesting to test our analysis framework on an \textit{Icelake} chip to find potential differences that may have an impact on our and other approaches to optimizing the performance of heterogeneous workloads.
 
-\subsubsection{SMT support in our analysis framework}
+\subsubsection{SMT Support in Our Analysis Framework}
 \label{sec:conclusion:futurework:smt}
 
 % TODO better reference
 As described in \Cref{sec:analysis}, our analysis framework does not support running on processors with \glsreset{SMT}\gls{SMT} enabled. Although we can not conceive of a reason why a processor should behave differently with respect to reclocking when \gls{SMT} is enabled, it is still possible that deviations exist. Given that in nearly all real-world scenarios \gls{SMT} would be enabled, we should implement \gls{SMT} support and verify that there are indeed no differences.
 
-\subsubsection{Huge pages in the analysis user-space component}
+\subsubsection{Huge Pages in the Analysis User-Space Component}
 \label{sec:conclusion:futurework:hugepages}
 
 In \Cref{sec:analysis:design:userspace} we described how cache coherency effects impacted the results of our analysis framework when run on multiple cores with many pages, each \SI{4}{\kibi\byte} in size. We alleviated the impact by using less pages and instead having a jump at the end to make them loop. However, this theoretically introduces small inaccuracies to the results as the instruction stream becomes slightly heterogeneous. Modern \gls{x86} processors alternatively also support pages that are \SI{2}{\mebi\byte} large \cite{intelsdmsysprogguide}, which may be a viable alternative to improve the accuracy of our results.
 
-\subsubsection{Instruction mixtures}
+\subsubsection{Instruction Mixtures}
 \label{sec:conclusion:futurework:mixtures}
 
 For our analysis, we ran each test using just one specific instruction, repeated many times. However, as Intel hints in their optimization manual \cite{inteloptimizationmanual}, the reclocking is actually triggered depending on the instruction mix executed over a window of several clock cycles. Using data science and machine learning techniques, it may be possible to create a model that can very precisely predict what mixtures will cause a frequency reduction.
 
-\subsubsection{Compiler optimizations using analysis results}
+\subsubsection{Compiler Optimizations Using Analysis Results}
 \label{sec:conclusion:futurework:compiler}
 
 Due to the dangers of possible performance degradation for heterogeneous workloads, most compilers do not generate \gls{AVX-512} code unless explicitly instructed to do so \cite{lemire2018avx512}. Even Intel's own C and C++ compiler that previously used to generate \gls{AVX-512} instructions aggressively whenever possible has become very conservative in this regard. With a deeper understanding about when and under what circumstances \gls{AVX}-induced reclocking happens, it may be possible for compilers to make use of \gls{AVX} more often without needing to worry about negative impacts. Thanks to the analysis we have done, much of the required knowledge is now available, while the rest may be achieved through further work as outlined in this chapter.
 
-\subsubsection{Reverse engineering of AVX frequency offsets}
+\subsubsection{Reverse Engineering of AVX Frequency Offsets}
 \label{sec:conclusion:futurework:reversing}
 
 In our discussion in \Cref{sec:evaluation:discussion} we have identified the impossibility to completely disable \gls{AVX} reclocking in hardware as a major drawback for our reimplementation approach. However, it is unknown how our motherboard's \gls{UEFI} configures \gls{AVX} frequency offsets in the processor. It may be possible to find out through some reverse engineering efforts though, and this could theoretically reveal a way to achieve full suppression of the processor's own reclocking mechanism.
 
-\subsubsection{Hardware limitations}
+\subsubsection{Hardware Limitations}
 \label{sec:conclusion:futurework:hardware}
 
 On Intel \textit{Skylake} \glspl{CPU} it is possible to measure executed floating-point vector instructions, however, no similar performance events exist for other vector instructions. Although this is not within our scope of control, we would like to see event types for all possible types of vector instructions in future processors. It might even make sense to have events that count executed instructions per instruction set. Being able to count all instruction types would be necessary for building a complete reimplementation that can be tested with real-world programs.
