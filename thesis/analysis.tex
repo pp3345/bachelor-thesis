@@ -146,7 +146,7 @@ Further, some measurement modes need to execute \gls{AVX} instructions until int
 The number of four pages per area was not chosen arbitrarily: on an \gls{x86} processor running in \SI{64}{\bit} mode \cite{intelsdmsysprogguide}, pages have a default size of \SI{4}{\kibi\byte}, thus four pages equate a total size of \SI{16}{\kibi\byte}. We originally used an area size of \SI{2}{\mebi\byte} (512 pages), based on the idea of achieving a purely homogeneous workload that does not contain any jumps to increase the precision of our measurements. However, tests showed that the code would become approximately \SI{20}{\percent} faster when run on multiple cores in parallel. We believe this behavior to be caused by instruction cache misses -- although modern \glspl{CPU} commonly feature an \gls{instprefetcher}, there is a caveat: it does not load instructions across page boundaries, and thus, every \SI{4}{\kibi\byte} of instructions we would see a cache miss and a costly pipeline stall until the next instructions arrive from memory. By using parallel execution on multiple cores, this effect is mitigated as the fastest core would already have loaded the instructions into the \gls{L3}, readily available for the other cores. It could be worthwhile to look into huge pages as an alternative solution, though that remains future work.
 % TODO is this related to spectre?
 
-In order to avoid inaccuracies caused by preemption, all execution threads use the \texttt{SCHED\_RR} scheduling policy offered by \gls{Linux}'s \gls{CFS} \cite{cfs} which is designed for near-real-time execution and selects real-time threads ordered by their priority; threads of equal priority are executed in a round-robin fashion. \gls{CFS} exposes additional configuration settings \cite{cfsrt} to control the fraction of time that may be consumed by real-time processes, namely \texttt{sched\_rt\_period\_us} and \texttt{sched\_rt\_runtime\_us}. The former sets a time window (\SI{1}{\second} per default) and the latter contains the absolute amount of time within that window that is available to real-time threads (\SI{950}{\milli\second} per default). In theory, we could configure these to allow for infinite real-time execution, however, practical tests have shown this leads to unbearable system hangs that would require further work on our implementation in order to fix. We settled for a value of \SI{990}{\milli\second} for \texttt{sched\_rt\_runtime\_us} as compromise.
+In order to avoid inaccuracies caused by preemption, all execution threads use the \texttt{SCHED\_RR} scheduling policy offered by \gls{Linux}'s \gls{CFS} \cite{cfs} which is designed for near-real-time execution and selects real-time threads ordered by their priority; threads of equal priority are executed in a round-robin fashion. \gls{CFS} exposes additional configuration settings \cite{cfsrt} to control the fraction of time that may be consumed by real-time processes, namely \texttt{sched\_rt\_period\_us} and \texttt{sched\_rt\_runtime\_us}. The former sets a time window (\SI{1}{\second} per default) and the latter contains the absolute amount of time within that window that is available to real-time threads (\SI{950}{\milli\second} per default). In theory, we could configure these to allow for infinite real-time execution, however, practical tests have shown this leads to unbearable system hangs that would require further work on our implementation in order to fix. We settled for a value of \SI{990}{\milli\second} for \texttt{sched\_rt\_runtime\_us} as compromise.\clearpage
 
 In all measurement modes, we configure the following performance events (as documented by Intel in \cite{intelsdmsysprogguide}):
 
@@ -177,7 +177,7 @@ Our first measurement mode is designed to measure the downclocking behavior~--~i
 
 In this mode, we simply map a single memory area with \gls{AVX} code to be run by all execution threads and configure the \gls{PMU} to trigger an interrupt and freeze the performance counters as soon as one cycle is spent in either level~1 or level~2, depending on the target license level passed as command line argument to the program. We use the \texttt{WAKE\_WAIT\_THREAD} interrupt action provided by the kernel component. Thereby, we can measure the time taken for the frequency reduction. When running a test case using this measurement mode with level~2 as target, we will also see whether any cycles were spent in level~1 from the respective performance counter. Thus, this measurement mode indeed answers the aforementioned questions.
 
-\begin{figure*}
+\begin{figure*}[t]
 	\centering
 	\begin{subfigure}[b]{0.5\textwidth}
 		\begin{tikzpicture}[font=\scriptsize]
@@ -252,7 +252,7 @@ Like in the \hyperref[sec:analysis:design:measurementmodes:downclock]{\texttt{DO
 
 Using the described procedure, we measure only the time spent after reaching a turbo license level with reduced frequency until returning to nominal frequency, which is exactly what we are interested in. Notably, in this mode, we instruct the \gls{PMU} to also count cycles while running in kernel-space (i.e., ring~$0$) as this is also time spent without executing \gls{AVX} instructions, and thus must be measured to retrieve precise results.
 
-\begin{figure*}
+\begin{figure*}[t]
 	\centering
 	\begin{subfigure}[b]{0.6\textwidth}
 		\begin{tikzpicture}[font=\scriptsize]
@@ -359,7 +359,7 @@ As cited at the beginning of \hyperref[sec:analysis]{this chapter}, Intel talks 
 
 For this purpose, the \texttt{PRE\_THROTTLE\_TIME} mode conceptually works very much the same way as the \hyperref[sec:analysis:design:measurementmodes:downclock]{\texttt{DOWNCLOCK}} mode: we configure an interrupt that fires and freezes the performance counters as soon as the first cycle was spent in throttled mode and run our \gls{AVX} code using the \texttt{WAIT\_FOR\_INTERRUPT} interrupt action. Thereby, we obtain the desired information about the behavior during the time between starting execution and \gls{OoO} engine throttling.
 
-\begin{figure*}
+\begin{figure*}[h]
 	\centering
 	\begin{tikzpicture}[font=\scriptsize]
 		\sffamily
@@ -405,11 +405,11 @@ In every case, we map an \gls{AVX} memory area in \texttt{LOOP\_R12\_CMP} mode w
 
 In case level~1 is targeted, all (non-pre-throttling) execution threads directly jump into the \texttt{LOOP\_R12\_CMP} area and use the \texttt{WAKE\_WAIT\_THREAD} interrupt action mode. For level~2 as target, we select the \texttt{GOTO} interrupt action and first jump into the aforementioned \texttt{LOOP\_AVX} area and configure an interrupt to be triggered as soon as one cycle in level~1 was completed. Afterwards, the execution threads are also moved to the \texttt{LOOP\_R12\_CMP} area, hence we used the \texttt{GOTO} action. 
 
-As we only want to see whether the amount of instructions in the \texttt{LOOP\_R12\_CMP} area is sufficient to eventually cause a frequency reduction, execution threads instruct the kernel module to fill the \texttt{r12} register with a pointer to a global variable that is set to a non-zero value by the main thread after a delay of \SI{1}{\milli\second}, thereby making all (again, non-pre-throttling) execution threads return after this time. Then, the main thread checks whether an interrupt was triggered on all expected cores. If yes, the test run has completed and the program quits. Otherwise, we remap the \texttt{LOOP\_R12\_CMP} with one more copy of the \gls{AVX} code than in the previous iteration. Wait threads that completed because an interrupt was triggered on their corresponding execution thread are respawned, afterwards we reset the variable used for the pointer in \texttt{r12} and start all execution threads again. Unlike in the first iteration, where execution threads generally spin for \SI{150}{\milli\second} to ramp up the core frequency (as described in \Cref{sec:analysis:design:userspace}), we only have them spin for \SI{3}{\milli\second} in further iterations as their respective cores are already running at their maximum frequency but possibly need to return from an attained turbo license level. Leaving them spinning again for \SI{150}{\milli\second} would incur an unnecessary prolongation of the test run. This procedure repeats until we have enough \gls{AVX} code in our \texttt{LOOP\_R12\_CMP} area to trigger interrupts on all desired cores. Note that execution threads used for pre-throttling are started once at the beginning and keep running without disruptions until the program exits.
+As we only want to see whether the amount of instructions in the \texttt{LOOP\_R12\_CMP} area is sufficient to eventually cause a frequency reduction, execution threads instruct the kernel module to fill the \texttt{r12} register with a pointer to a global variable that is set to a non-zero value by the main thread after a delay of \SI{1}{\milli\second}, thereby making all (again, non-pre-throttling) execution threads return after this time -- generally assuming that \SI{1}{\milli\second} is enough time for a turbo license level change to happen. Then, the main thread checks whether an interrupt was triggered on all expected cores. If yes, the test run has completed and the program quits. Otherwise, we remap the \texttt{LOOP\_R12\_CMP} with one more copy of the \gls{AVX} code than in the previous iteration. Wait threads that completed because an interrupt was triggered on their corresponding execution thread are respawned, afterwards we reset the variable used for the pointer in \texttt{r12} and start all execution threads again. Unlike in the first iteration, where execution threads generally spin for \SI{150}{\milli\second} to ramp up the core frequency (as described in \Cref{sec:analysis:design:userspace}), we only have them spin for \SI{3}{\milli\second} in further iterations as their respective cores are already running at their maximum frequency but possibly need to return from an attained turbo license level. Leaving them spinning again for \SI{150}{\milli\second} would incur an unnecessary prolongation of the test run. This procedure repeats until we have enough \gls{AVX} code in our \texttt{LOOP\_R12\_CMP} area to trigger interrupts on all desired cores. Note that execution threads used for pre-throttling are started once at the beginning and keep running without disruptions until the program exits.
 
 At the end, the number of copies of the \gls{AVX} code in the \texttt{LOOP\_R12\_CMP} memory reflects the amount of instructions needed to cause the frequency transition.
 
-\begin{figure*}
+\begin{figure*}[t]
 	\centering
 	\begin{subfigure}[b]{0.6\textwidth}
 		\begin{tikzpicture}[font=\scriptsize]
@@ -500,7 +500,7 @@ At the end, the number of copies of the \gls{AVX} code in the \texttt{LOOP\_R12\
 		\end{tikzpicture}
 		\caption{Level~2}
 	\end{subfigure}
-	\caption{A certain amount of \gls{AVX} instructions is required to actually trigger frequency switches. The \texttt{REQUIRED\_INSTRUCTIONS} mode measures how many are precisely needed.}
+	\caption{A certain amount of \gls{AVX} instructions is required to actually trigger frequency switches. The \texttt{REQUIRED\_INSTRUCTIONS} mode measures precisely how many are needed.}
 	\label{fig:analysis:design:measurementmodes:nonavxtime}
 \end{figure*}
 
