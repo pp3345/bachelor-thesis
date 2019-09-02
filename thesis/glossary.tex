@@ -3,15 +3,15 @@
 \newacronym[description={An instruction set extension for x86 \glspl{CPU} which adds complex \glspl{vectorinst}}]{AVX}{AVX}{Advanced Vector Extensions}
 \newacronym[description={The main execution unit (processor) of a computer}]{CPU}{CPU}{Central Processing Unit}\glsunset{CPU}
 \newacronym[description={An instruction that multiplies two values and adds (or subtracts) a third one, i.e., $a*b+c$}]{FMA}{FMA}{fused multiply-add}
-\newacronym[description={A specific processor model brought to market}]{SKU}{SKU}{Stock-Keeping Unit}\glsunset{SKU}
+\newacronym[description={A specific processor model brought to market}]{SKU}{SKU}{stock-keeping unit}\glsunset{SKU}
 \newacronym[description={Various early \gls{vectorinst} sets for the x86 architecture, which are still commonly supported by modern \glspl{CPU} but do not require frequency reduction for stable execution}]{SSE}{SSE}{Streaming SIMD Extensions}
 \newacronym[description={See \gls{vectorinst}}]{SIMD}{SIMD}{Single Instruction, Multiple Data}
 \newacronym[description={A unit found in many modern microprocessors that enables software to measure performance and bottlenecks on the hardware level}]{PMU}{PMU}{Performance Monitoring Unit}
-\newacronym[description={A simple counter on current x86 processors that increments steadily with a fixed frequency and that can thus be used to measure wall-clock time}]{TSC}{TSC}{Time-Stamp Counter}
+\newacronym[description={A simple counter on current x86 processors that increments steadily with a fixed frequency and that can thus be used to measure wall-clock time}]{TSC}{TSC}{time-stamp counter}
 \newacronym[description={SMT-capable processors feed the execution pipeline of a single physical core simultaneously with instruction streams from multiple threads to achieve better execution unit utilization by presenting the core in the form of multiple \textit{logical cores}. x86 \glspl{CPU} often support twofold SMT}]{SMT}{SMT}{Simultaneous Multi-Threading}
 \newacronym[description={A special register, usually for configuration or measurement purposes, that isn't defined by the instruction set architecture but is specific to a microarchitecture or \gls{SKU}}]{MSR}{MSR}{model-specific register}
 \newacronym[description={One of the interrupt controllers found in modern x86 \glspl{CPU}}]{APIC}{APIC}{Advanced Programmable Interrupt Controller}\glsunset{APIC}
-\newacronym[description={An \gls{APIC}'s LVT stores the interrupt vectors to use for certain purposes}]{LVT}{LVT}{Local Vector Table}
+\newacronym[description={An \gls{APIC}'s LVT stores the interrupt vectors to use for certain purposes, e.g., interrupts from the \gls{PMU}}]{LVT}{LVT}{Local Vector Table}
 \newacronym[description={The instruction pointer of a thread contains the memory address of the instruction that is currently being executed}]{instptr}{IP}{instruction pointer}
 \newacronym[description={The standard file format for executable binary files commonly used by many UNIX systems, including \gls{Linux}}]{ELF}{ELF}{Executable and Linkable Format}\glsunset{ELF}
 \newacronym[description={The default scheduler used in current \gls{Linux} kernels. Designed to offer both low latency for interactive systems and high throughput for servers}]{CFS}{CFS}{Completely Fair Scheduler}
@@ -39,9 +39,9 @@
 \newacronym[description={Hard disks are mass storage devices that use magnetization to store data on rotating disks. Nowadays, HDDs increasingly vanish from all kinds of computers and are more commonly replaced by \glspl{SSD}}]{HDD}{HDD}{hard disk drive}
 \newacronym[description={A solid state drive uses flash memory for persistent data storage. Modern SSDs commonly beat the performance of \glspl{HDD} by several orders of magnitude with only a fraction of their energy consumption}]{SSD}{SSD}{solid-state drive}\glsunset{SSD}
 
-\newglossaryentry{AVX1}{name={AVX1},description={The initial version of \gls{AVX} with \SI{256}{\bit}-wide vectors}}
+\newglossaryentry{AVX1}{name={AVX1},description={The initial version of \gls{AVX} with \SI[number-unit-product=-]{256}{\bit}-wide vectors}}
 \newglossaryentry{AVX2}{name={AVX2},description={\gls{AVX} version 2, which extended the previous \gls{AVX1} with new instructions}}
-\newglossaryentry{AVX-512}{name={AVX-512},description={The third iteration of the \gls{AVX} instruction set with support for \SI{512}{\bit}-wide vectors}}
+\newglossaryentry{AVX-512}{name={AVX-512},description={The third iteration of the \gls{AVX} instruction set with support for \SI[number-unit-product=-]{512}{\bit}-wide vectors}}
 \newglossaryentry{vectorinst}{name={vector instruction},description={A vector instruction is an instruction for a microprocessor which executes an operation not on only just one value, but on a vector consisting of several values}}
 \newglossaryentry{libc}{name={libc},description={libc is the name of the standard library of the C programming language}}
 \newglossaryentry{UNIXsig}{name={UNIX signal},description={Signals defined by the UNIX operating system specification that may be sent to a process either by another process or by the kernel itself. Most signals terminate a process by default, unless the process opted to use custom handling}}
@@ -53,6 +53,6 @@
 \newglossaryentry{microinst}{name={micro-instruction},description={Micro-instructions are the instructions passed into the execution engine of a processor after being split up from the \glspl{macroinst} that make up the program that is being executed}}
 \newglossaryentry{moore}{name={Moore's Law}, description={Moore's Law is named after Gordon Moore, one of the co-founders of Intel. It states that the integration density of integrated circuits doubles every two years}}
 \newglossaryentry{dennard}{name={Dennard's Law},description={Dennard's Law was devised by Robert Dennard and states that the power density of transistors stays constant as they become smaller}}
-\newglossaryentry{Linux}{name={Linux},description={Linux is an operating system kernel originally published by Linus Torvalds in 1991. Today it dominates many markets, including smartphones, servers, and high-performance computing and has become the world's most widely used kernel. It even runs on cars, trains, and airplanes}}
+\newglossaryentry{Linux}{name={Linux},description={Linux is an operating system kernel originally published by Linus Torvalds in 1991. Today it dominates many markets, including smartphones, servers, and high-performance computing and has become the world's most widely used kernel. It even runs on cars, airplanes, and trains}}
 \newglossaryentry{x86}{name={x86},description={x86 is an instruction set architecture introduced by Intel in 1978. Today, x86-based processors are commonly found in workstations, servers, and laptops}}
 \newglossaryentry{superscalar}{name={superscalar pipeline},description={Processors featuring a superscalar pipeline are capable of executing multiple instruction of the same thread in parallel by having duplicates of all necessary ressources (e.g., decode and execution units)}}

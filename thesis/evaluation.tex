@@ -128,7 +128,7 @@ Transitions to level~2 examined using the same measurement modes, however, show 
 
 Tests using the \texttt{UPCLOCK} mode show that \textsc{avxfreq} behaves as designed: the average and median times taken to revert a frequency reduction lie at about \SI{665}{\micro\second}, which is slightly below the \SI{666}{\micro\second} we were aiming at. All results are distributed very homogeneously around this value. Again, we attribute the small deviation to time taken by context switches and code executed within the kernel.
 
-\subsection{Optimization Potential}
+\subsection{Overhead and Reclocking Optimization Potential}
 \label{sec:evaluation:results:stagedexecution}
 
 We designed our multi-phase execution tool with the goal of being able to determine a baseline for what optimized reclocking algorithms could achieve in the best case by using user-space-driven decisions as we described in \Cref{sec:design:userspacedrivendecisions}. Further, this tool allows us additional comparisons between \textsc{avxfreq} and Intel's hardware implementation -- in the previous section, we essentially measured how well our reimplementation reflects the model we wanted to achieve, whereas here, we can verify that \textsc{avxfreq} provides similar performance to the hardware implementation.
