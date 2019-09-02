@@ -21,7 +21,7 @@ While at first glance it may seem strange that increased vectorization with \gls
 \section{Dynamic Voltage and Frequency Scaling}
 \label{sec:background:dvfs}
 
-\citeauthor{mittal2014survey} \cite{mittal2014survey} defines \textit{\acrlong{DVFS}} ({\acrshort{DVFS}\glsunset{DVFS}) as a technique \enquote{for altering the voltage and/or frequency of a computing system based on performance and power requirements.} The required electrical power $P$ for switching a \gls{CMOS} gatter can be characterized as $P=\frac{1}{2} \times C \times V^2 \times f$, where $C$ is the circuit's electrical capacitance, $V$ is the voltage, and $f$ is the switching frequency \cite{Hennessy:2017:CAS:3207796}. Looking at the formula where power increases linear in frequency and quadratic in voltage, it becomes clear that the power consumption of a processor can be regulated by controlling these two parameters. Therefore, the idea behind \gls{DVFS} is to have a microprocessor run at high frequencies when system load demands for high performance and at lower frequencies when the system is idling to save energy -- the voltage is set according to what is required to maintain stable execution (i.e., all transistors properly switch within a single clock cycle) at the respective frequencies.
+\citeauthor{mittal2014survey} \cite{mittal2014survey} defines \textit{\acrlong{DVFS}} ({\acrshort{DVFS}\glsunset{DVFS}) as a technique \enquote{for altering the voltage and/or frequency of a computing system based on performance and power requirements.} The required electrical power $P$ for switching a \gls{CMOS} gatter can be characterized as $P=\frac{1}{2} \times C \times U^2 \times f$, where $C$ is the circuit's electrical capacitance, $U$ is the voltage, and $f$ is the switching frequency \cite{Hennessy:2017:CAS:3207796}. Looking at the formula where power increases linear in frequency and quadratic in voltage, it becomes clear that the power consumption of a processor can be regulated by controlling these two parameters. Therefore, the idea behind \gls{DVFS} is to have a microprocessor run at high frequencies when system load demands for high performance and at lower frequencies when the system is idling to save energy -- the voltage is set according to what is required to maintain stable execution (i.e., all transistors properly switch within a single clock cycle) at the respective frequencies.
 
 Modern Intel processors have a \gls{DVFS} implementation called \emph{Enhanced Intel SpeedStep Technology} (EIST) \cite{intelsdmsysprogguide}. Using EIST, the operating system may select a \glspl{P-state} for each core -- these \emph{performance states} govern a core's frequency and its voltage. On current-generation processors, \glspl{P-state} simply represent integer multipliers of the chip's bus clock.
 
@@ -39,13 +39,13 @@ The issue that motivates our work is, in its essence, related to problems found 
 To estimate whether energy can be saved by turning a hard disk off for a time period, we need to calculate the break-even time $t_{be}$, i.e., the amount of time after which the energy savings from being shut down exceed the energy drawn during the spin-down and spin-up phases. We can simply formulate the equation to find $t_{be}$ as follows:
 
 \begin{displaymath}
-\underbrace{p_a \times t_{be}}_{\text{energy consumed when disk stays active}} = \underbrace{e_t + p_s \times (t_{be} - t_t)}_{\text{energy consumed when disk is turned off}}
+\underbrace{P_a \times t_{be}}_{\text{energy consumed when disk stays active}} = \underbrace{E_t + P_s \times (t_{be} - t_t)}_{\text{energy consumed when disk is turned off}}
 \end{displaymath}
 
-Here, $p_a$ is the electrical power consumed while a disk is active, $p_s$ is the power consumption while in standby (note that this is not $0$ as some parts of the electronics need to stay active even while the motor is off), $e_t$ is the energy needed during spin-down and spin-up and $t_t$ is the time needed for these transitions. Thus, $t_{be} - t_t$ is the actual time spent in the standby state. Transforming the formula yields
+Here, $P_a$ is the electrical power consumed while a disk is active, $P_s$ is the power consumption while in standby (note that this is not $0$ as some parts of the electronics need to stay active even while the motor is off), $E_t$ is the energy needed during spin-down and spin-up and $t_t$ is the time needed for these transitions. Thus, $t_{be} - t_t$ is the actual time spent in the standby state. Transforming the formula yields
 
 \begin{displaymath}
-t_{be} = \frac{e_t - p_s \times t_t}{p_w - p_s}
+t_{be} = \frac{E_t - P_s \times t_t}{P_w - P_s}
 \end{displaymath}
 
 \noindent as a way of directly calculating $t_{be}$.
