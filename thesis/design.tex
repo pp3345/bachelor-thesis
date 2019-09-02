@@ -56,7 +56,7 @@ Note that for \textsc{avxfreq} to work properly, disabling or at least reducing 
 		\draw[dashed, color=kitdarkgrey] ([xshift=\separatordist cm] kernel-rect south east) -- ([xshift=\separatordist cm] kernel-rect north east) [ref=separator];
 
 		% user-space
-		\draw ([xshift=\separatordist cm] separator south east) rectangle ++(\componentrectwidth,\componentrectheight) [ref=user-rect];
+		\draw ([xshift=2*\separatordist cm + \componentrectwidth cm] 0, 0) rectangle ++(\componentrectwidth,\componentrectheight) [ref=user-rect];
 		\node[color=kitblue] at ([yshift=-0.4 cm] user-rect south) {User-space};
 
 		% steps
