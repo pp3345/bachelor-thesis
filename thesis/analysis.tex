@@ -688,15 +688,18 @@ Here, we indeed found interesting differences between different instruction type
 		ymin=0,
 		xlabel={Instructions},
 		scale only axis,
-		width=\textwidth,
+		width=\textwidth-0.5cm,
 		height=5cm,
 		axis lines=left,
-		xmin=2900,
-		xmax=32000,
-		ymax=245
+%		xmin=2900,
+%		xmax=32000,
+		xmin=0, xmax=32000,
+		xtick=data,
+		ymax=290,
+		scaled ticks=base 10:0
 	]
 		\addplot[color=kitblue, fill=kitblue, hist] table {plots/avx_dp_fma_256_unrolled_l1_1cpus_non_avx_time_avx_instructions.csv};
-		\draw[color=kitgreen, thick] ({axis cs:12431,0}) -- ({axis cs:12431,238}) node[anchor=west, pos=0.96] {median = 12431};
+		\draw[color=kitgreen, thick] ({axis cs:12431,0}) -- ({axis cs:12431,275.5}) node[anchor=west, pos=0.96, xshift=0.1cm] {median = 12431};
 	\end{axis}
 %	\begin{axis}[
 %		axis y line=none,
