@@ -34,6 +34,8 @@ This way, \textsc{avxfreq} is capable of fulfilling what we outlined at the begi
 
 In general, it should not be forgotten that this implementation only tries to reflect a subset of the results from our analysis in \Cref{sec:analysis}. Some parts are not possible to reimplement, e.g., because there are no performance events available specifically for integer vector instructions \cite{intelsdmsysprogguide}. For other parts, we deliberately decided not to implement them for now in order to reduce complexity -- what we built should be enough for a basic evaluation of our approach.
 
+Note that for \textsc{avxfreq} to work properly, disabling or at least reducing \gls{AVX} reclocking is a necessary prerequisite as the processor will forcibly reduce the frequency when executing demanding \gls{AVX} instructions even when \gls{HWP} is not enabled. Certain motherboards allow controlling the frequency offsets used for the different license levels via their \gls{UEFI} configuration, and thus the use of such a motherboard is a strict requirement for \textsc{avxfreq}.
+
 \begin{figure*}
 	\centering
 	\begin{tikzpicture}[font=\scriptsize]
