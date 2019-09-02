@@ -28,7 +28,7 @@ Finally, towards the end of 2019, \textit{Icelake} processors will be the first 
 \label{sec:conclusion:futurework:smt}
 
 % TODO better reference
-As described in \Cref{sec:analysis}, our analysis framework does not support running on processors with \glsreset{SMT}\gls{SMT} enabled. Although we can not conceive of a reason why a processor should behave differently with respect to reclocking when \gls{SMT} is enabled, it is still possible that deviations exist. Given that in nearly all real-world scenarios \gls{SMT} would be enabled, we should implement \gls{SMT} support and verify that there are indeed no differences.
+As described in \Cref{sec:analysis:design:kernel}, our analysis framework does not support running on processors with \glsreset{SMT}\gls{SMT} enabled. Although we can not conceive of a reason why a processor should behave differently with respect to reclocking when \gls{SMT} is enabled, it is still possible that deviations exist. Given that in nearly all real-world scenarios \gls{SMT} would be enabled, we should implement \gls{SMT} support and verify that there are indeed no differences.
 
 \subsubsection{Huge Pages in the Analysis User-Space Component}
 \label{sec:conclusion:futurework:hugepages}
