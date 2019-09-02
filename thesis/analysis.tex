@@ -624,7 +624,7 @@ Similarly, we can confirm an observation previously made by \citeauthor{lemire20
 		ylabel={Instructions per Cycle},
 		scale only axis,
 		width=\textwidth,
-		height=5cm,
+		height=3.5cm,
 		axis lines=left,
 		ymin=0,
 		ymax=0.45,
@@ -633,7 +633,7 @@ Similarly, we can confirm an observation previously made by \citeauthor{lemire20
 		xmax=1010
 	]
 		\addplot[only marks, color=kitgreen] table {plots/avx_dp_fma_512_l1_1cpus_downclock_throughput.csv} node[pos=0.5,below=0.25cm] {non-unrolled};
-		\addplot[only marks, color=kitblue] table {plots/avx_dp_fma_512_unrolled_l1_1cpus_downclock_throughput.csv} node[pos=0.5,below=0.6cm] {unrolled};
+		\addplot[only marks, color=kitblue] table {plots/avx_dp_fma_512_unrolled_l1_1cpus_downclock_throughput.csv} node[pos=0.5,below=0.4cm] {unrolled};
 	\end{axis}
 	\end{tikzpicture}
 	\caption{Throughput of the \texttt{vfmaddsub132pd} instruction before switching from level~0 to level~1 is doubled when unrolled.}
@@ -654,7 +654,7 @@ The answer here, however, is very simple: in all tested cases, the throttling oc
 
 Next, we are interested in the amount of instructions required to eventually trigger a switch to level~1. This is what the \hyperref[sec:analysis:design:measurementmodes:nonavxtime]{\texttt{REQUIRED\_INSTRUCTIONS}} measurement mode was built for: it incrementally builds and executes \gls{AVX} code with more instructions until a license level switch can be observed within a time window after an execution iteration.
 
-Here, we indeed found interesting differences between different instruction types: all \SI[number-unit-product=-]{512}{\bit} instructions trigger a switch to level~1 after exactly one executed instruction. For \SI[number-unit-product=-]{256}{\bit} instructions, however, a quite different picture emerges: \Cref{fig:analysis:results:downclocking:avx_dp_fma_256_unrolled_l1_1cpus_non_avx_time:avx_instructions} exemplary depicts the required amount of instructions exemplary for the \SI{256}{\bit} \texttt{vfmaddsub132pd} unrolled case, without pre-throttling and with one core executing \gls{AVX} instructions. The result varies between a minimum of $3317$ and a maximum of $30845$ instructions while the average and the median are set rather near each other, at $12982.8$ and $12431$, respectively. \Cref{fig:analysis:results:downclocking:avx_dp_fma_256_unrolled_l1_1cpus_non_avx_time:avx_instructions:histogram} shows the same data, plotted as a histogram. It becomes clearly visible that the median is far nearer to the minimum than it is to the maximum.
+Here, we indeed found interesting differences between different instruction types: all \SI[number-unit-product=-]{512}{\bit} instructions trigger a switch to level~1 after exactly one executed instruction. For \SI[number-unit-product=-]{256}{\bit} instructions, however, a quite different picture emerges: \Cref{fig:analysis:results:downclocking:avx_dp_fma_256_unrolled_l1_1cpus_non_avx_time:avx_instructions} depicts the required amount of instructions exemplary for the \SI{256}{\bit} \texttt{vfmaddsub132pd} unrolled case, without pre-throttling and with one core executing \gls{AVX} instructions. The result varies between a minimum of $3317$ and a maximum of $30845$ instructions while the average and the median are set rather near each other, at $12982.8$ and $12431$, respectively. \Cref{fig:analysis:results:downclocking:avx_dp_fma_256_unrolled_l1_1cpus_non_avx_time:avx_instructions:histogram} shows the same data, plotted as a histogram. It becomes clearly visible that the median is far nearer to the minimum than it is to the maximum.
 
 \begin{figure}
 	\begin{tikzpicture}[trim axis left]
@@ -664,14 +664,13 @@ Here, we indeed found interesting differences between different instruction type
 		ylabel={Instructions},
 		scale only axis,
 		width=\textwidth,
-		height=5cm,
+		height=4cm,
 		axis lines=left,
-		ymin=1700,
+		ymin=0,
 		ymax=32000,
 		xtick=\empty,
 		xmin=-10,
-		xmax=1010,
-		axis y discontinuity=parallel
+		xmax=1010
 	]
 		\addplot[only marks, color=kitblue] table {plots/avx_dp_fma_256_unrolled_l1_1cpus_non_avx_time_avx_instructions.csv};
 	\end{axis}
@@ -689,7 +688,7 @@ Here, we indeed found interesting differences between different instruction type
 		xlabel={Instructions},
 		scale only axis,
 		width=\textwidth-0.5cm,
-		height=5cm,
+		height=4cm,
 		axis lines=left,
 %		xmin=2900,
 %		xmax=32000,
@@ -730,7 +729,7 @@ We implemented pre-throttling mode to be able to test what happens when addition
 		ylabel={Downclocking Time (\si{\micro\second})},
 		scale only axis,
 		width=\textwidth,
-		height=5cm,
+		height=4cm,
 		axis lines=left,
 		ymin=15,
 		ymax=50,
@@ -745,7 +744,7 @@ We implemented pre-throttling mode to be able to test what happens when addition
 		ylabel={Downclocking Time (\si{\micro\second})},
 		scale only axis,
 		width=\textwidth,
-		height=5cm,
+		height=4cm,
 		hide axis,
 		ymin=15,
 		ymax=50,
@@ -753,7 +752,7 @@ We implemented pre-throttling mode to be able to test what happens when addition
 		xmin=0,
 		xmax=1000
 	]
-	\addplot[color=kitgreen, domain=0:1000, thick] {24.593225806452} node[pos=0, below=0.7cm, anchor=west] {median = \SI{24.59}{\micro\second}};
+	\addplot[color=kitgreen, domain=0:1000, thick] {24.593225806452} node[pos=0, below=0.55cm, anchor=west] {median = \SI{24.59}{\micro\second}};
 	\end{axis}
 	\end{tikzpicture}
 	\caption{Downclocking time to level~1 for the \SI[number-unit-product=-]{512}{\bit} \texttt{vfmaddsub132pd} instruction. The results are very homogeneous around a median of \SI{24.59}{\micro\second}.}
@@ -770,7 +769,7 @@ As with these results we have fully established all conditions required for \gls
 		ylabel={Downclocking Time (\si{\micro\second})},
 		scale only axis,
 		width=\textwidth,
-		height=5cm,
+		height=4cm,
 		axis lines=left,
 		ymin=15,
 		ymax=50,
@@ -798,7 +797,7 @@ Looking at \SI[number-unit-product=-]{256}{\bit} instructions, we find that the 
 		ylabel={Downclocking Time (\si{\micro\second})},
 		scale only axis,
 		width=\textwidth,
-		height=5cm,
+		height=4cm,
 		axis lines=left,
 		ymin=24,
 		ymax=78,
@@ -813,7 +812,7 @@ Looking at \SI[number-unit-product=-]{256}{\bit} instructions, we find that the 
 		ylabel={\si{\micro\second}},
 		scale only axis,
 		width=\textwidth,
-		height=5cm,
+		height=4cm,
 		hide axis,
 		ymin=24,
 		ymax=78,
@@ -821,7 +820,7 @@ Looking at \SI[number-unit-product=-]{256}{\bit} instructions, we find that the 
 		xmin=0,
 		xmax=1000
 	]
-	\addplot[color=kitgreen, domain=0:1000, thick] {51.516774193548} node[pos=0, below=2.05cm, anchor=west] {median = \SI{51.52}{\micro\second}};
+	\addplot[color=kitgreen, domain=0:1000, thick] {51.516774193548} node[pos=0, right=0.2cm, below=1.55cm, anchor=west] {median = \SI{51.52}{\micro\second}};
 	\end{axis}
 	\end{tikzpicture}
 	\caption{Downclocking time to level 1 for the \SI[number-unit-product=-]{256}{\bit} \texttt{vfmaddsub132pd} instruction. This takes a lot longer than with the \SI[number-unit-product=-]{512}{\bit} version.}
@@ -830,30 +829,32 @@ Looking at \SI[number-unit-product=-]{256}{\bit} instructions, we find that the 
 
 So far we have described the frequency reduction process until level~1 is reached. For cases that target this level (i.e., everything apart from \gls{AVX-512} heavy instructions with the notable exceptions outlined above), nothing further happens until the load that induced the license level switch ceases and the frequency is brought back to its previous level again, as described later in \Cref{sec:analysis:results:upclocking}.
 
+Our findings about the second turbo license switch from level~1 to level~2 (where applicable) did not yield any surprises: in general, the behavior is similar to what happens during the switch from level~0 to level~1.
+
 \begin{figure}
 	\begin{tikzpicture}[trim axis left]
 	\sffamily
 	\begin{axis}[
-	xlabel={Runs ($n=1000$)},
-	ylabel={Downclocking Time (\si{\micro\second})},
-	scale only axis,
-	width=\textwidth,
-	height=5cm,
-	axis lines=left,
-	ymin=42,
-	ymax=80,
-	xtick=\empty,
-	xmin=-10,
-	xmax=1010,
-%	axis y discontinuity=parallel
+		xlabel={Runs ($n=1000$)},
+		ylabel={Downclocking Time (\si{\micro\second})},
+		scale only axis,
+		width=\textwidth,
+		height=4cm,
+		axis lines=left,
+		ymin=42,
+		ymax=80,
+		xtick=\empty,
+		xmin=-10,
+		xmax=1010
 	]
 	\addplot[only marks, color=kitblue] table {plots/avx_dp_fma_512_unrolled_l2_1cpus_downclock_time.csv};
-	\end{axis}
+	%\draw[color=red] ([xshift=-0.5cm] {axis cs:-50,43.35}) -- ([xshift=0.5cm] {axis cs:-10,43.35});
+	\end{axis}%
 	\begin{axis}[
 	ylabel={\si{\micro\second}},
 	scale only axis,
 	width=\textwidth,
-	height=5cm,
+	height=4cm,
 	hide axis,
 	ymin=42,
 	ymax=80,
@@ -861,14 +862,15 @@ So far we have described the frequency reduction process until level~1 is reache
 	xmin=0,
 	xmax=1000,
 	]
-	\addplot[color=kitgreen, domain=0:1000, thick] {51.433548387097} node[pos=0, below=0.75cm, anchor=west] {median = \SI{51.43}{\micro\second}};
+	\addplot[color=kitgreen, domain=0:1000, thick] {51.433548387097} node[pos=0.02, below=0.7cm, anchor=west] {median = \SI{51.43}{\micro\second}};
 	\end{axis}
+	\fill[white] (-0.28cm,0.14cm) rectangle (0.28cm,0.28cm); % for some reason enabling discontinuity in this plot fucks up everything
+	\draw[color=black] (-0.28cm,0.28cm) -- (0.28cm,0.28cm);
+	\draw[color=black] (-0.28cm,0.14cm) -- (0.28cm,0.14cm);
 	\end{tikzpicture}
 	\caption{Time taken from level~0 to level~2 with the \texttt{vfmaddsub132pd} instruction. Again, the results are very homogeneous.}
 	\label{fig:analysis:results:downclocking:avx_dp_fma_512_unrolled_l2_1cpus_downclock:time}
 \end{figure}
-
-Our findings about the second turbo license switch from level~1 to level~2 (where applicable) did not yield any surprises: in general, the behavior is similar to what happens during the switch from level~0 to level~1.
 
 \Cref{fig:analysis:results:downclocking:avx_dp_fma_512_unrolled_l2_1cpus_downclock:time} shows the time needed to reach level~2 using the unrolled \texttt{vfmaddsub132pd} instruction as an example. We find the data to be homogeneous with only a few outliers, similar to previous results. The median is located at \SI{51.43}{\micro\second}, however, note that this also includes the time taken from level~0 to level~1. By subtracting the median of the transition to level~1 (\SI{24.59}{\micro\second}), we can deduce it takes \SI{26.9}{\micro\second} from level~1 to level~2, which is only slightly longer. For multiple cores and pre-throttling mode, the general behavior and the increases with multiple cores are about the same. This fits our theory that the \gls{PCU} takes longer to make decisions with multiple license transition requests pending.
 
@@ -885,10 +887,10 @@ After a core's clock is reduced due to a license level transition, it runs at th
 		ylabel={Upclocking Delay (\si{\milli\second})},
 		scale only axis,
 		width=\textwidth,
-		height=5cm,
+		height=4cm,
 		axis lines=left,
 		ymin=0.65,
-		ymax=0.75,
+		ymax=0.72,
 		xtick=\empty,
 		xmin=-10,
 		xmax=1010,
@@ -900,10 +902,10 @@ After a core's clock is reduced due to a license level transition, it runs at th
 		ylabel={\si{\micro\second}},
 		scale only axis,
 		width=\textwidth,
-		height=5cm,
+		height=4cm,
 		hide axis,
 		ymin=0.65,
-		ymax=0.75,
+		ymax=0.72,
 		xtick=\empty,
 		xmin=0,
 		xmax=1000
@@ -925,7 +927,7 @@ Again using the results from the \texttt{vfmaddsub132pd} instruction as example,
 		ylabel={Upclocking Delay (\si{\milli\second})},
 		scale only axis,
 		width=\textwidth,
-		height=5cm,
+		height=4cm,
 		axis lines=left,
 		ymin=0.5,
 		ymax=1.35,
@@ -940,7 +942,7 @@ Again using the results from the \texttt{vfmaddsub132pd} instruction as example,
 		ylabel={\si{\micro\second}},
 		scale only axis,
 		width=\textwidth,
-		height=5cm,
+		height=4cm,
 		hide axis,
 		ymin=0.5,
 		ymax=1.35,
@@ -948,7 +950,7 @@ Again using the results from the \texttt{vfmaddsub132pd} instruction as example,
 		xmin=0,
 		xmax=1000
 	]
-	\addplot[color=kitgreen, domain=0:1000, thick] {0.674378709677419} node[pos=0, below=0.4cm, anchor=west] {median = \SI{0.674}{\milli\second}};
+	\addplot[color=kitgreen, domain=0:1000, thick] {0.674378709677419} node[pos=0, below=0.35cm, anchor=west] {median = \SI{0.674}{\milli\second}};
 	\end{axis}
 	\end{tikzpicture}
 	\caption{Upclocking times after executing \SI[number-unit-product=-]{512}{\bit} \texttt{vfmaddsub132pd} instructions until level~1 is reached. While most runs still yield a time of \SI[quotient-mode=fraction]{2/3}{\milli\second}, some are scattered within a range up to \SI[quotient-mode=fraction]{4/3}{\milli\second}.}
@@ -965,7 +967,7 @@ Looking at the very same instruction in its \SI[number-unit-product=-]{512}{\bit
 		ylabel={Upclocking Delay (\si{\milli\second})},
 		scale only axis,
 		width=\textwidth,
-		height=5cm,
+		height=4cm,
 		axis lines=left,
 		ymin=0.5,
 		ymax=1.35,
