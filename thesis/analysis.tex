@@ -74,7 +74,7 @@ Upon startup, each execution thread generates a \gls{PMU} configuration designed
 		\draw[dashed, color=kitdarkgrey] ([xshift=\separatordist cm] kernel-rect south east) -- ([xshift=\separatordist cm] kernel-rect north east) [ref=separator];
 
 		% user-space
-		\draw ([xshift=\separatordist cm] separator south east) rectangle ++(\componentrectwidth,\componentrectheight) [ref=user-rect];
+		\draw ([xshift=2*\separatordist cm +\componentrectwidth cm] 0, 0) rectangle ++(\componentrectwidth,\componentrectheight) [ref=user-rect];
 		\draw[densely dotted, color=kitdarkgrey] (user-rect south) -- ++(0,\componentrectheight);
 		\node[align=center,anchor=north] at ([xshift=-\quartercomponentrectwidth cm] user-rect north) {execution \\ thread};
 		\node[align=center,anchor=north] at ([xshift=+\quartercomponentrectwidth cm] user-rect north) {wait \\ thread};
