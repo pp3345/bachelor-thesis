@@ -8,6 +8,7 @@
 		\pause
 		\item What if we could predict when AVX code will be executed again?
 		\item Could we raise the frequency earlier and improve performance during scalar phases?
+		\item Similar approaches are used for device power management
 	\end{itemize}
 	\pause
 	\begin{center}
@@ -27,10 +28,10 @@
 			\item[$\Rightarrow$] reimplement algorithm in software
 		\end{itemize}
 		\pause
-		\item Intel provides vague description of algorithm
+		\item Intel only provides vague description of algorithm
 		\begin{itemize}
-			\item downclocking after $\leq$ \SI{500}{\micro\second}, upclocking after \SI{2}{\milli\second}, two frequency levels
-			\item[$\Rightarrow$] need to analyze what the processors really do
+			\item Downclocking after $\leq$ \SI{500}{\micro\second}, upclocking after \SI{2}{\milli\second}, two frequency levels
+			\item[$\Rightarrow$] need to analyze what processors really do
 		\end{itemize}
 	\end{itemize}
 \end{frame}
