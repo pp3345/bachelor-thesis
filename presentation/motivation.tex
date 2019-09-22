@@ -1,0 +1,43 @@
+\section{Motivation}
+\begin{frame}[t]{Motivation}
+	\begin{itemize}
+		\item AVX is a modern vector processing extension for x86 processors
+		\item Current Intel CPUs reduce their clock frequency when executing AVX code
+		\item Lowered frequencies attained for a while after last AVX instruction
+		\begin{itemize}
+			\item[$\Rightarrow$] negative impact on performance in heterogeneous workloads
+		\end{itemize}
+	\end{itemize}
+	\pause
+	\begin{figure}
+		\centering
+		\vspace*{-0.7em}
+		\begin{tikzpicture}[font=\footnotesize]
+			\sffamily
+			\begin{axis}[
+				symbolic x coords={BoringSSL, OpenSSL AVX2, OpenSSL AVX-512},
+				xtick=data,
+				x tick label style  = {text width=2cm, align=center},
+				ylabel={requests/s},
+				axis y line=left,
+				axis x line*=bottom,
+				height=3.5cm,
+				width=5.5cm,
+				nodes near coords,
+				ymin=0,
+				ybar,
+				enlarge x limits={0.15},
+				ytick=\empty,
+				xtick style={draw=none},
+			]
+			\addplot[fill=kitblue, color=kitblue] coordinates {
+				(BoringSSL, 16287)
+				(OpenSSL AVX2, 15795)
+				(OpenSSL AVX-512, 14558)
+			};
+			\end{axis}
+		\end{tikzpicture}
+		\vspace*{-0.7em}
+		\caption{nginx throughput with different ChaCha20-Poly1305 implementations\footfullcite{cloudflareinteldangers}}
+	\end{figure}
+\end{frame}

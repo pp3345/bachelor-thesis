@@ -1,14 +1,39 @@
 \documentclass[18pt]{beamer}
+\usepackage{tcolorbox}
 \usepackage{templates/beamerthemekitwide}
 \usepackage{ifthen}
 \usepackage{pdfpages}
 \usepackage{pifont}
-\usepackage{Settings}
+\usepackage{hyperref}
+\usepackage{csquotes}
+\usepackage[hyperref,backend=biber,url=false]{biblatex}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.16}
+\usepgfplotslibrary{statistics}
+\usepackage{tikz}
+\usetikzlibrary{decorations.pathreplacing,shapes,positioning}
+\usepackage{siunitx}
 
 \title[Analysis and Optimization of AVX DVFS]{Analysis and Optimization of Dynamic Voltage and Frequency Scaling for AVX Workloads Using a Software-Based Reimplementation}
 \author{Yussuf Khalil}
 \date{25 September 2019}
 \institute{Operating Systems Group}
+
+\addbibresource{presentation.bib}
+
+\selectlanguage{english}
+
+\definecolor{kitgreenexcl}{cmyk}{1.0,  0.0,  0.6, 0.0}
+\definecolor{kitblue}     {cmyk}{0.8,  0.5,  0.0, 0.0}
+\definecolor{kitgreen}    {cmyk}{0.6,  0.0,  1.0, 0.0}
+\definecolor{kityellow}   {cmyk}{0.0,  0.05, 1.0, 0.0}
+\definecolor{kitorange}   {cmyk}{0.0,  0.45, 1.0, 0.0}
+\definecolor{kitbrown}    {cmyk}{0.35, 0.5,  1.0, 0.0}
+\definecolor{kitred}      {cmyk}{0.25, 1.0,  1.0, 0.0}
+\definecolor{kitpurple}   {cmyk}{0.25, 1.0,  0.0, 0.0}
+\definecolor{kitcyan}     {cmyk}{0.9,  0.05, 0.0, 0.0}
+\definecolor{kitgrey}	  {cmyk}{0.0,  0.0,  0.0, 0.15}
+\definecolor{kitdarkgrey} {cmyk}{0.0,  0.0,  0.0, 0.5}
 
 \begin{document}
 \selectlanguage{english}
@@ -16,5 +41,8 @@
 \begin{frame}
 	\titlepage
 \end{frame}
+
+\include{motivation}
+\include{idea}
 
 \end{document}

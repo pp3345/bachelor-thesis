@@ -1,0 +1,36 @@
+\section{Idea}
+\begin{frame}[t]{Idea}
+	\begin{itemize}
+		\item Frequency switches are costly
+		\begin{itemize}
+			\item[$\Rightarrow$] wait before raising frequency after AVX execution
+		\end{itemize}
+		\pause
+		\item What if we could predict when AVX code will be executed again?
+		\item Could we raise the frequency earlier and improve performance during scalar phases?
+	\end{itemize}
+	\pause
+	\begin{center}
+		\vspace{1em}
+		Try different reclocking algorithms!
+	\end{center}
+\end{frame}
+
+\begin{frame}[t]{Idea}
+	\begin{itemize}
+		\item AVX reclocking is controlled solely by CPU itself
+		\begin{itemize}
+			\item We can not modify the hardware
+			\begin{itemize}
+				\item But we can (mostly) disable automatic reclocking
+			\end{itemize}
+			\item[$\Rightarrow$] reimplement algorithm in software
+		\end{itemize}
+		\pause
+		\item Intel provides vague description of algorithm
+		\begin{itemize}
+			\item downclocking after $\leq$ \SI{500}{\micro\second}, upclocking after \SI{2}{\milli\second}, two frequency levels
+			\item[$\Rightarrow$] need to analyze what the processors really do
+		\end{itemize}
+	\end{itemize}
+\end{frame}
