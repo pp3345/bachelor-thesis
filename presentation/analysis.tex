@@ -1,0 +1,118 @@
+\section{Analysis}
+
+\begin{frame}[t]{Methodology}
+	We want to find out
+	\begin{itemize}
+		\item when exactly a core will reduce or raise its frequency,
+		\item how long it needs to do that,
+		\item and whether Intel's description is correct and complete.
+	\end{itemize}
+	\pause
+	How can we measure that?
+	\begin{itemize}
+		\item Use performance counters
+		\item Run synthetic code snippets designed to trigger specific behavior
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[t]{Framework}
+	\begin{itemize}
+		\item Linux module to configure performance counters and handle interrupts
+		\item User-space program to conduct measurements
+	\end{itemize}
+	\pause
+	\textbf{Measurement Modes}
+	\begin{itemize}
+		\item \texttt{DOWNCLOCK} -- measures time until a reduced frequency is reached
+		\item \texttt{UPCLOCK} -- time until frequency is raised again
+		\item \texttt{PRE\_THROTTLE\_TIME} -- time before out-of-order engine is throttled upon AVX execution
+		\item \texttt{REQUIRED\_INSTRUCTIONS} -- count instructions required to eventually trigger frequency reduction
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[t]{Findings}
+	Coarse behavior (Intel Core i9-7940X):
+	\begin{enumerate}
+		\item Throttle out-of-order engine after first AVX instruction
+		\item Switch to frequency level 1, needs $\approx$ \SI{25}{\micro\second}
+		\item Switch to frequency level 2 (only heavy AVX-512 instructions), $\approx$ \SI{27}{\micro\second}
+		\item Return to baseline frequency \SI[quotient-mode=fraction]{2/3}{\milli\second} after last AVX instruction
+	\end{enumerate}
+	\pause
+	In contrast, Intel claims
+	\begin{itemize}
+		\item downclocking takes \enquote{up to \SI{500}{\micro\second}}
+		\item upclocking after \SI{2}{\milli\second}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[t]{Interesting Outlier}
+	\begin{figure}
+		\centering
+		\begin{tikzpicture}[trim axis left, font=\footnotesize]
+		\sffamily
+		\begin{axis}[
+		xlabel={Runs ($n=1000$)},
+		ylabel={Upclocking Delay (\si{\milli\second})},
+		scale only axis,
+		width=9cm,
+		height=3cm,
+		axis lines=left,
+		ymin=0.45,
+		ymax=1.35,
+		xtick=\empty,
+		xmin=-10,
+		xmax=1010,
+		axis y discontinuity=parallel
+		]
+		\addplot[only marks, color=kitblue] table {../thesis/plots/avx_dp_fma_512_unrolled_l1_1cpus_upclock_time.csv};
+		\end{axis}
+		\begin{axis}[
+		ylabel={\si{\micro\second}},
+		scale only axis,
+		width=9cm,
+		height=3cm,
+		hide axis,
+		ymin=0.45,
+		ymax=1.35,
+		xtick=\empty,
+		xmin=0,
+		xmax=1000
+		]
+		\addplot[color=kitgreen, domain=0:1000, thick] {0.674378709677419} node[pos=0.03, below=0.3cm, anchor=west] {median = \SI{0.674}{\milli\second}};
+		\end{axis}
+		\end{tikzpicture}
+	\end{figure}
+	\begin{itemize}
+		\item Heavy AVX-512 instructions \emph{sometimes} need up to \SI[quotient-mode=fraction]{4/3}{\milli\second} to return from level 1
+		\item We do not have an explanation for this
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[t]{256 bit vs. 512 bit}
+	\begin{figure}
+		\centering
+		\begin{tikzpicture}[trim axis left]
+		\sffamily
+		\begin{axis}[
+		xlabel={Runs ($n=1000$)},
+		ylabel={Instructions},
+		scale only axis,
+		width=9cm,
+		height=3cm,
+		axis lines=left,
+		ymin=0,
+		ymax=32000,
+		xtick=\empty,
+		xmin=-10,
+		xmax=1010
+		]
+		\addplot[only marks, color=kitblue, mark options={scale=0.5}] table {../thesis/plots/avx_dp_fma_256_unrolled_l1_1cpus_non_avx_time_avx_instructions.csv};
+		\end{axis}
+		\end{tikzpicture}
+	\end{figure}
+	\begin{itemize}
+		\item 512-bit instructions always trigger frequency reductions after first instruction
+		\item 256-bit ones exhibit high variance in the amount of required operations (shown above)
+	\end{itemize}
+\end{frame}
