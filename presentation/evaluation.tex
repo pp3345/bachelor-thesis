@@ -1,0 +1,96 @@
+\section{Evaluation}
+\begin{frame}[t]{Reimplementation}
+	\begin{itemize}
+		\item Need to evaluate correctness and quality of reimplementation
+		\begin{itemize}
+			\item[$\Rightarrow$] use analysis framework, compare with hardware results
+		\end{itemize}
+		\item Analysis framework and reimplementation both use performance monitoring
+		\begin{itemize}
+			\item[$\Rightarrow$] modify analysis kernel module and reimplementation to work together
+		\end{itemize}
+		\item Measure performance overhead
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[t]{Model Accuracy}
+	\begin{itemize}
+		\item Downclocking to level 1 works as expected
+		\item Reaching level 2 takes $\approx$ \SI{104}{\micro\second}
+		\begin{itemize}
+			\item unlike the hardware, we can measure throughput only over time
+		\end{itemize}
+		\item Upclocking after \SI{666}{\micro\second} as designed
+		\begin{itemize}
+			\item however, up to \SI{100}{\micro\second} more possible due to limited measurement accuracy
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[t]{Overhead and Oracle Performance \\ \footnotesize AVX phase}
+	\begin{figure}
+		\centering
+		\begin{tikzpicture}[trim axis left, font=\footnotesize]
+		\sffamily
+		\begin{axis}[
+		xlabel={Runs ($n=1000$)},
+		ylabel={AVX-512 FMA Loop Iterations},
+		scale only axis,
+		width=9cm,
+		height=3cm,
+		axis lines=left,
+		ymin=35050000,
+		ymax=36200000,
+		xtick=\empty,
+		xmin=-10,
+		xmax=1010,
+		legend cell align=left,
+		legend style={at={(9cm-9cm/1020*10,0.25)}, anchor=east},
+		axis y discontinuity=parallel
+		]
+		\addplot[only marks, color=kitblue, mark options={scale=0.5}] table {../thesis/plots/staged_execution_0_0_2000000_200000_0_666_avx_hwp.csv}; %node[pos=1.0,below=0.5cm,anchor=east] {Hardware reclocking};
+		\addplot[only marks, color=kitgreen, mark options={scale=0.5}] table {../thesis/plots/staged_execution_0_0_2000000_200000_0_666_avx_manual.csv}; %node[pos=1.0,above=0.72cm,anchor=east] {User-space-driven};
+		\addplot[only marks, color=kityellow, mark options={scale=0.5}] table {../thesis/plots/staged_execution_0_0_2000000_200000_0_666_avx_avxfreq.csv}; %node[pos=1.0,above=0.67cm,anchor=east] {\textsc{avxfreq}};
+		\legend{Hardware,Oracle,Reimplementation}
+		\end{axis}
+		\end{tikzpicture}
+	\end{figure}
+	\begin{itemize}
+		\item Reimplementation is $\approx$ \SI{1}{\percent} slower in AVX phases
+		\item Oracle yields same performance as hardware
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[t]{Overhead and Oracle Performance \\ \footnotesize Scalar phase}
+	\begin{figure}
+		\centering
+		\begin{tikzpicture}[trim axis left, font=\footnotesize]
+		\sffamily
+		\begin{axis}[
+		xlabel={Runs ($n=1000$)},
+		ylabel={Scalar Loop Iterations},
+		scale only axis,
+		width=9cm,
+		height=3cm,
+		axis lines=left,
+		ymin=230000,
+		ymax=530000,
+		xtick=\empty,
+		xmin=-10,
+		xmax=1010,
+		legend cell align=left,
+		legend style={at={(9cm-9cm/1020*10,0.75)}, anchor=east},
+		axis y discontinuity=parallel
+		]
+		\addplot[only marks, color=kitblue, mark options={scale=0.5}] table {../thesis/plots/staged_execution_0_0_2000000_200000_0_666_scalar2_hwp.csv}; %node[pos=1.0,below=0.5cm,anchor=east] {Hardware reclocking};
+		\addplot[only marks, color=kitgreen, mark options={scale=0.5}] table {../thesis/plots/staged_execution_0_0_2000000_200000_0_666_scalar2_manual.csv}; %node[pos=1.0,above=0.72cm,anchor=east] {User-space-driven};
+		\addplot[only marks, color=kityellow, mark options={scale=0.5}] table {../thesis/plots/staged_execution_0_0_2000000_200000_0_666_scalar2_avxfreq.csv}; %node[pos=1.0,above=0.67cm,anchor=east] {\textsc{avxfreq}};
+		\legend{Hardware,Oracle,Reimplementation}
+		\end{axis}
+		\end{tikzpicture}
+	\end{figure}
+	\begin{itemize}
+		\item Reimplementation $\approx$ \SI{2}{\percent} slower
+		\item Oracle gives $\approx$ \SI{8}{\percent} median performance increase (99th percentile: \SI{15}{\percent})
+	\end{itemize}
+\end{frame}
