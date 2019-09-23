@@ -13,6 +13,8 @@
 \usepackage{tikz}
 \usetikzlibrary{decorations.pathreplacing,shapes,positioning}
 \usepackage{siunitx}
+\usepackage{marvosym}
+\usepackage[clock]{ifsym}
 
 \title[Analysis and Optimization of AVX DVFS]{Analysis and Optimization of Dynamic Voltage and Frequency Scaling for AVX Workloads Using a Software-Based Reimplementation}
 \author{Yussuf Khalil}
@@ -35,6 +37,19 @@
 \definecolor{kitgrey}	  {cmyk}{0.0,  0.0,  0.0, 0.15}
 \definecolor{kitdarkgrey} {cmyk}{0.0,  0.0,  0.0, 0.5}
 
+% https://tex.stackexchange.com/a/47797
+\tikzset{ref/.style={insert path={%
+			coordinate [pos=0,xshift=-0.5\pgflinewidth,yshift=-0.5\pgflinewidth] (#1 south west)
+			coordinate [pos=1,xshift=0.5\pgflinewidth,yshift=0.5\pgflinewidth]   (#1 north east)
+			coordinate [pos=.5] (#1 center)
+			(#1 south west |- #1 north east)     coordinate (#1 north west)
+			(#1 center     |- #1 north east)     coordinate (#1 north)
+			(#1 center     |- #1 south west)     coordinate (#1 south)
+			(#1 south west -| #1 north east)     coordinate (#1 south east)
+			(#1 center     -| #1 south west)     coordinate (#1 west)
+			(#1 center     -| #1 north east)     coordinate (#1 east)
+}}}
+
 \begin{document}
 \selectlanguage{english}
 
@@ -45,5 +60,6 @@
 \include{motivation}
 \include{idea}
 \include{analysis}
+\include{reimplementation}
 
 \end{document}
