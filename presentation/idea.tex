@@ -26,6 +26,10 @@
 				\item But we can (mostly) disable automatic reclocking
 			\end{itemize}
 			\item[$\Rightarrow$] reimplement algorithm in software
+			\begin{itemize}
+				\item Allows to derive and test alternative algorithms
+				\item Needed to measure overhead of approach
+			\end{itemize}
 		\end{itemize}
 		\pause
 		\item Intel only provides vague description of algorithm\footfullcite{inteloptimizationmanual}
@@ -33,7 +37,7 @@
 			\item Downclocking after $\leq$ \SI{500}{\micro\second}
 			\item Upclocking after \SI{2}{\milli\second}
 			\item Two frequency levels (\enquote{turbo licenses})
-			\item[$\Rightarrow$] need to analyze what processors really do
+			\item[$\Rightarrow$] need to analyze what processors really do to create reimplementation
 		\end{itemize}
 	\end{itemize}
 \end{frame}
