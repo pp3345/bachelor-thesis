@@ -17,17 +17,313 @@
 
 \begin{frame}[t]{Framework}
 	\begin{itemize}
-		\item Linux module to configure performance counters and handle interrupts
-		\item User-space program to conduct measurements
+		\item Linux kernel module
+		\begin{itemize}
+			\item configures Performance Monitoring Unit (PMU)
+			\item handles interrupts
+		\end{itemize}
+		\item User-space program
+		\begin{itemize}
+			\item instructs kernel component
+			\item conducts measurements
+		\end{itemize}
 	\end{itemize}
-	\pause
-	\textbf{Measurement Modes}
-	\begin{itemize}
-		\item \texttt{DOWNCLOCK} -- measures time until a reduced frequency is reached
-		\item \texttt{UPCLOCK} -- time until frequency is raised again
-		\item \texttt{PRE\_THROTTLE\_TIME} -- time before out-of-order engine is throttled upon AVX execution
-		\item \texttt{REQUIRED\_INSTRUCTIONS} -- count instructions required to eventually trigger frequency reduction
-	\end{itemize}
+\end{frame}
+
+\begin{frame}{Measurement Modes \\ \small Downclocking}
+	\begin{figure}
+		\centering
+		\begin{subfigure}[b]{0.5\textwidth}
+			\begin{tikzpicture}[font=\scriptsize]
+			\sffamily
+			\pgfmathsetmacro{\levelheight}{0.2}
+			\pgfmathsetmacro{\linelength}{3}
+			\pgfmathsetmacro{\barlength}{0.3}
+			
+			% legend
+			\draw[fill=kitgreen, color=kitgreen] (-2.2, 0.9) rectangle ++(\barlength cm, \levelheight cm);
+			\node[minimum height=\levelheight cm, text centered, anchor=west] at (-1.85, 1) {AVX};
+			
+			%\node[color=kityellow, align=center] at (-2.05, 0.3) {\large\Lightning};
+			%\node[minimum height=\levelheight cm, text centered, anchor=west] at (-1.85, 0.3) {Interrupt};
+			
+			% level 0
+			\node[color=kitblue, minimum height=\levelheight cm, text centered] at (0, 1) {Level~0};
+			\draw[color=kitdarkgrey] (0.7, 1) -- ++(\linelength cm,0);
+			
+			% level 1
+			\node[color=kitblue, minimum height=\levelheight cm, text centered] at (0, 0.3) {Level~1};
+			\draw[color=kitdarkgrey] (0.7, 0.3) -- ++(\linelength cm,0);
+			
+			% bars and transitions
+			\draw[<-] (0.8, 1.1) -- ++(0, 0.2);
+			\draw[fill=kitgreen, color=kitgreen] (0.8, 0.9) rectangle ++(2cm, \levelheight cm);
+			\draw[->, anchor=east] (2.8, 0.9) -- ++(0, -0.6);% node[pos=0.5, anchor=west] {\large\color{kityellow}\Lightning};
+			
+			\draw[decorate, decoration={brace, amplitude=5pt, mirror}] (0.8, 0.2) -- ++(2cm,0) node[pos=0.5, anchor=north, yshift=-0.1cm, align=center] {measure \\ time};
+			\end{tikzpicture}
+			\caption{Level~1}
+		\end{subfigure}%
+		\begin{subfigure}[b]{0.5\textwidth}
+			\begin{tikzpicture}[font=\scriptsize]
+			\sffamily
+			\pgfmathsetmacro{\levelheight}{0.2}
+			\pgfmathsetmacro{\linelength}{5}
+			
+			% level 0
+			\node[color=kitblue, minimum height=\levelheight cm, text centered] at (0, 1) {Level~0};
+			\draw[color=kitdarkgrey] (0.7, 1) -- ++(\linelength cm,0);
+			
+			% level 1
+			\node[color=kitblue, minimum height=\levelheight cm, text centered] at (0, 0.3) {Level~1};
+			\draw[color=kitdarkgrey] (0.7, 0.3) -- ++(\linelength cm,0);
+			
+			% level 2
+			\node[color=kitblue, minimum height=\levelheight cm, text centered] at (0, -0.4) {Level~2};
+			\draw[color=kitdarkgrey] (0.7, -0.4) -- ++(\linelength cm,0);
+			
+			% bars and transitions
+			\draw[<-] (0.8, 1.1) -- ++(0, 0.2);
+			\draw[fill=kitgreen, color=kitgreen] (0.8, 0.9) rectangle ++(2cm, \levelheight cm);
+			\draw[->, anchor=east] (2.8, 0.9) -- ++(0, -0.5);
+			\draw[fill=kitgreen, color=kitgreen] (2.8, 0.2) rectangle ++(2cm, \levelheight cm);
+			\draw[->, anchor=east] (4.8, 0.2) -- ++(0, -0.6);% node[pos=0.5, anchor=west] {\large\color{kityellow}\Lightning};
+			
+			\draw[decorate, decoration={brace, amplitude=5pt, mirror}] (0.8, -0.5) -- ++(4cm,0) node[pos=0.5, anchor=north, yshift=-0.1cm, align=center] {measure \\ time};
+			\end{tikzpicture}
+			\caption{Level~2}
+		\end{subfigure}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{Measurement Modes \\ \small Upclocking}
+	\begin{figure}[t]
+		\centering
+		\begin{subfigure}[b]{0.5\textwidth}
+			\begin{tikzpicture}[font=\scriptsize]
+			\sffamily
+			\pgfmathsetmacro{\levelheight}{0.2}
+			\pgfmathsetmacro{\linelength}{3}
+			\pgfmathsetmacro{\legendbarlength}{0.3}
+			\pgfmathsetmacro{\barlength}{1.2}
+			
+			% legend
+			\draw[fill=kitgreen, color=kitgreen] (-2.2, 1.6) rectangle ++(\legendbarlength cm, \levelheight cm);
+			\node[minimum height=\levelheight cm, text centered, anchor=west] at (-1.85, 1.7) {AVX};
+			
+			\draw[fill=kitbrown, color=kitbrown] (-2.2, 0.9) rectangle ++(\legendbarlength cm, \levelheight cm);
+			\node[minimum height=\levelheight cm, text centered, anchor=west] at (-1.85, 1) {Scalar};
+			
+			%\node[color=kityellow, align=center] at (-2.05, 0.3) {\large\Lightning};
+			%\node[minimum height=\levelheight cm, text centered, anchor=west] at (-1.85, 0.3) {Interrupt};
+			
+			% level 0
+			\node[color=kitblue, minimum height=\levelheight cm, text centered] at (0, 1) {Level~0};
+			\draw[color=kitdarkgrey] (0.6, 1) -- ++(\linelength cm,0);
+			
+			% level 1
+			\node[color=kitblue, minimum height=\levelheight cm, text centered] at (0, 0.3) {Level~1};
+			\draw[color=kitdarkgrey] (0.6, 0.3) -- ++(\linelength cm,0);
+			
+			% bars and transitions
+			\draw[<-] (0.7, 1.1) -- ++(0, 0.2);
+			\draw[fill=kitgreen, color=kitgreen] (0.7, 0.9) rectangle ++(\barlength cm, \levelheight cm);
+			\draw[->] (1.9, 0.9) -- ++(0, -0.5);% node[pos=0.5, anchor=west] {\large\color{kityellow}\Lightning};
+			\draw[fill=kitbrown, color=kitbrown] (1.9, 0.2) rectangle ++(\barlength cm, \levelheight cm);
+			\draw[->] (3.1, 0.4) -- ++(0, 0.6);% node[pos=0.41666, anchor=west] {\large\color{kityellow}\Lightning};
+			
+			\draw[decorate, decoration={brace, amplitude=5pt, mirror}] (1.9, 0.2) -- ++(\barlength cm,0) node[pos=0.5, anchor=north, yshift=-0.1cm, align=center] {measure \\ time};
+			\end{tikzpicture}
+			\caption{Level~1}
+		\end{subfigure}%
+		\begin{subfigure}[b]{0.5\textwidth}
+			\begin{tikzpicture}[font=\scriptsize]
+			\sffamily
+			\pgfmathsetmacro{\linelength}{4.2}
+			\pgfmathsetmacro{\barlength}{1.2}
+			\pgfmathsetmacro{\barheight}{0.2}
+			\pgfmathsetmacro{\linemargin}{0.6}
+			\pgfmathsetmacro{\linepadding}{0.1}
+			\pgfmathsetmacro{\linedistance}{0.7}
+			\pgfmathsetmacro{\linezeroy}{1}
+			\pgfmathsetmacro{\lineoney}{\linezeroy-\linedistance}
+			\pgfmathsetmacro{\linetwoy}{\lineoney-\linedistance}
+			\pgfmathsetmacro{\interbararrowheight}{\linedistance-\barheight}
+			\pgfmathsetmacro{\measurey}{\linetwoy-0.5*\barheight}
+			
+			% level 0
+			\node[color=kitblue, minimum height=\barheight cm, text centered] at (0, \linezeroy) {Level~0};
+			\draw[color=kitdarkgrey] (\linemargin, \linezeroy) -- ++(\linelength cm,0);
+			
+			% level 1
+			\node[color=kitblue, minimum height=\barheight cm, text centered] at (0, \lineoney) {Level~1};
+			\draw[color=kitdarkgrey] (\linemargin, \lineoney) -- ++(\linelength cm,0);
+			
+			% level 2
+			\node[color=kitblue, minimum height=\barheight cm, text centered] at (0, \linetwoy) {Level~2};
+			\draw[color=kitdarkgrey] (\linemargin, \linetwoy) -- ++(\linelength cm,0);
+			
+			% bars and transitions
+			\pgfmathsetmacro{\baronex}{\linemargin+\linepadding}
+			\pgfmathsetmacro{\baroney}{\linezeroy-0.5*\barheight}
+			\draw[fill=kitgreen, color=kitgreen] (\baronex, \baroney) rectangle ++(\barlength cm, \barheight cm);
+			
+			\pgfmathsetmacro{\bartwox}{\baronex+\barlength}
+			\pgfmathsetmacro{\bartwoy}{\lineoney-0.5*\barheight}
+			\draw[fill=kitgreen, color=kitgreen] (\bartwox, \bartwoy) rectangle ++(\barlength cm, \barheight cm);
+			
+			\pgfmathsetmacro{\barthreex}{\bartwox+\barlength}
+			\pgfmathsetmacro{\barthreey}{\linetwoy-0.5*\barheight}
+			\draw[fill=kitbrown, color=kitbrown] (\barthreex, \barthreey) rectangle ++(\barlength cm, \barheight cm);
+			
+			\pgfmathsetmacro{\arrowoney}{\baroney+\barheight}
+			\draw[<-] (\baronex, \arrowoney) -- ++(0, 0.2);
+			
+			\draw[->, anchor=east] (\bartwox, \baroney) -- ++(0, -\interbararrowheight cm);
+			
+			\draw[->, anchor=east] (\barthreex, \bartwoy) -- ++(0, -\interbararrowheight cm);% node[pos=0.5, anchor=west] {\large\color{kityellow}\Lightning};
+			
+			\pgfmathsetmacro{\arrowfourx}{\barthreex+\barlength}
+			\pgfmathsetmacro{\arrowfoury}{\barthreey+\barheight}
+			\pgfmathsetmacro{\arrowfourlength}{\interbararrowheight+0.5*\barheight+\linedistance}
+			\pgfmathsetmacro{\arrowfournodepos}{0.5*\interbararrowheight/\arrowfourlength}
+			\draw[->, anchor=east] (\arrowfourx,\arrowfoury) -- ++(0, \arrowfourlength cm);% node[pos=\arrowfournodepos, anchor=west] {\large\color{kityellow}\Lightning};
+			
+			\draw[decorate, decoration={brace, amplitude=5pt, mirror}] (\barthreex, \measurey) -- ++(\barlength cm,0) node[pos=0.5, anchor=north, yshift=-0.1cm, align=center] {measure \\ time};
+			\end{tikzpicture}
+			\caption{Level~2}
+		\end{subfigure}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{Measurement Modes \\ \small Throttle Activation}
+	\begin{figure}
+		\centering
+		\begin{tikzpicture}[font=\scriptsize]
+		\sffamily
+		\pgfmathsetmacro{\levelheight}{0.2}
+		\pgfmathsetmacro{\linelength}{1.8}
+		\pgfmathsetmacro{\legendbarlength}{0.3}
+		\pgfmathsetmacro{\barlength}{1.2}
+		
+		% legend
+		\draw[fill=kitgreen, color=kitgreen] (-2.5, 0.9) rectangle ++(\legendbarlength cm, \levelheight cm);
+		\node[minimum height=\levelheight cm, text centered, anchor=west] at (-2.15, 1) {AVX};
+		
+		%\node[color=kityellow, align=center] at (-2.35, 0.3) {\large\Lightning};
+		%\node[minimum height=\levelheight cm, text centered, anchor=west] at (-2.15, 0.3) {Interrupt};
+		
+		% level 0
+		\node[color=kitblue, minimum height=\levelheight cm, text centered] at (0, 1) {Level~0};
+		\draw[color=kitdarkgrey] (0.6, 1) -- ++(\linelength cm,0);
+		
+		% throttle
+		\node[color=kitblue, minimum height=\levelheight cm, text centered] at (0, 0.3) {Throttle};
+		\draw[color=kitdarkgrey] (0.6, 0.3) -- ++(\linelength cm,0);
+		
+		% bars and transitions
+		\draw[<-] (0.7, 1.1) -- ++(0, 0.2);
+		\draw[fill=kitgreen, color=kitgreen] (0.7, 0.9) rectangle ++(\barlength cm, \levelheight cm);
+		\draw[->] (1.9, 0.9) -- ++(0, -0.6);% node[pos=0.5, anchor=west] {\large\color{kityellow}\Lightning};
+		
+		\draw[decorate, decoration={brace, amplitude=5pt, mirror}] (0.7, 0.2) -- ++(\barlength cm,0) node[pos=0.5, anchor=north, yshift=-0.1cm, align=center] {measure \\ instructions};
+		\end{tikzpicture}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{Measurement Modes \\ \small Trigger Instructions}
+	\begin{figure}
+		\centering
+		\begin{subfigure}[b]{0.5\textwidth}
+			\begin{tikzpicture}[font=\scriptsize]
+			\sffamily
+			\pgfmathsetmacro{\levelheight}{0.2}
+			\pgfmathsetmacro{\linelength}{3}
+			\pgfmathsetmacro{\legendbarlength}{0.3}
+			\pgfmathsetmacro{\barlength}{1.5}
+			
+			% legend
+			\draw[fill=kitgreen, color=kitgreen] (-2.2, 1.6) rectangle ++(\legendbarlength cm, \levelheight cm);
+			\node[minimum height=\levelheight cm, text centered, anchor=west] at (-1.85, 1.7) {AVX};
+			
+			\draw[fill=kitbrown, color=kitbrown] (-2.2, 0.9) rectangle ++(\legendbarlength cm, \levelheight cm);
+			\node[minimum height=\levelheight cm, text centered, anchor=west] at (-1.85, 1) {Scalar};
+			
+			%\node[color=kityellow, align=center] at (-2.05, 0.3) {\large\Lightning};
+			%\node[minimum height=\levelheight cm, text centered, anchor=west] at (-1.85, 0.3) {Interrupt};
+			
+			% level 0
+			\node[color=kitblue, minimum height=\levelheight cm, text centered] at (0, 1) {Level~0};
+			\draw[color=kitdarkgrey] (0.6, 1) -- ++(\linelength cm,0);
+			
+			% level 1
+			\node[color=kitblue, minimum height=\levelheight cm, text centered] at (0, 0.3) {Level~1};
+			\draw[color=kitdarkgrey] (0.6, 0.3) -- ++(\linelength cm,0);
+			
+			% bars and transitions
+			\draw[<-] (0.7, 1.1) -- ++(0, 0.2);
+			\draw[fill=kitgreen, color=kitgreen] (0.7, 0.9) rectangle ++(0.6 cm, \levelheight cm);
+			\draw[fill=kitbrown, color=kitbrown] (1.3, 0.9) rectangle ++(0.9 cm, \levelheight cm);
+			\draw[->] (2.2, 0.9) -- ++(0, -0.6);% node[pos=0.5, anchor=west] {\large\color{kityellow}\Lightning};
+			\draw[draw=none] (0.7, 0.9) rectangle ++(\barlength cm, \levelheight cm);% node[pos=0.5, align=center, color=black, font=\tiny] {\texttt{LOOP\_R12\_CMP}};
+			
+			\draw[decorate, decoration={brace, amplitude=3pt, mirror}] (0.7, 0.2) -- ++(0.6 cm,0) node[pos=0.5, anchor=north, yshift=-0.1cm, align=center] {measure \\ instructions};
+			\end{tikzpicture}
+			\caption{Level~1}
+		\end{subfigure}%
+		\begin{subfigure}[b]{0.5\textwidth}
+			\begin{tikzpicture}[font=\scriptsize]
+			\sffamily
+			\pgfmathsetmacro{\linelength}{4.2}
+			\pgfmathsetmacro{\barlength}{1.5}
+			\pgfmathsetmacro{\barheight}{0.2}
+			\pgfmathsetmacro{\linemargin}{0.6}
+			\pgfmathsetmacro{\linepadding}{0.1}
+			\pgfmathsetmacro{\linedistance}{0.7}
+			\pgfmathsetmacro{\linezeroy}{1}
+			\pgfmathsetmacro{\lineoney}{\linezeroy-\linedistance}
+			\pgfmathsetmacro{\linetwoy}{\lineoney-\linedistance}
+			\pgfmathsetmacro{\interbararrowheight}{\linedistance-\barheight}
+			\pgfmathsetmacro{\measurey}{\linetwoy-0.5*\barheight}
+			
+			% level 0
+			\node[color=kitblue, minimum height=\barheight cm, text centered] at (0, \linezeroy) {Level~0};
+			\draw[color=kitdarkgrey] (\linemargin, \linezeroy) -- ++(\linelength cm,0);
+			
+			% level 1
+			\node[color=kitblue, minimum height=\barheight cm, text centered] at (0, \lineoney) {Level~1};
+			\draw[color=kitdarkgrey] (\linemargin, \lineoney) -- ++(\linelength cm,0);
+			
+			% level 2
+			\node[color=kitblue, minimum height=\barheight cm, text centered] at (0, \linetwoy) {Level~2};
+			\draw[color=kitdarkgrey] (\linemargin, \linetwoy) -- ++(\linelength cm,0);
+			
+			% bars and transitions
+			\pgfmathsetmacro{\baronex}{\linemargin+\linepadding}
+			\pgfmathsetmacro{\baroney}{\linezeroy-0.5*\barheight}
+			\draw[fill=kitgreen, color=kitgreen] (\baronex, \baroney) rectangle ++(\barlength cm, \barheight cm);% node[pos=0.5, align=center, color=black, font=\tiny] {\texttt{LOOP\_AVX}};
+			
+			\pgfmathsetmacro{\bartwox}{\baronex+\barlength}
+			\pgfmathsetmacro{\bartwoy}{\lineoney-0.5*\barheight}
+			\draw[fill=kitgreen, color=kitgreen] (\bartwox, \bartwoy) rectangle ++(0.6 cm, \barheight cm);
+			\draw[fill=kitbrown, color=kitbrown] (\bartwox+0.6, \bartwoy) rectangle ++(0.9 cm, \barheight cm);
+			\draw[draw=none] (\bartwox, \bartwoy) rectangle ++(\barlength cm, \barheight cm);% node[pos=0.5, align=center, color=black, font=\tiny] {\texttt{LOOP\_R12\_CMP}};
+			
+			\pgfmathsetmacro{\barthreex}{\bartwox+\barlength}
+			\pgfmathsetmacro{\barthreey}{\linetwoy-0.5*\barheight}
+			
+			\pgfmathsetmacro{\arrowoney}{\baroney+\barheight}
+			\draw[<-] (\baronex, \arrowoney) -- ++(0, 0.2);
+			
+			\draw[->, anchor=east] (\bartwox, \baroney) -- ++(0, -\interbararrowheight cm);% node[pos=0.5, anchor=west] {\large\color{kityellow}\Lightning};
+			
+			\draw[->, anchor=east] (\barthreex, \bartwoy) -- ++(0, -0.6 cm);% node[pos=0.5, anchor=west] {\large\color{kityellow}\Lightning};
+			
+			\draw[decorate, decoration={brace, amplitude=3pt, mirror}] (\bartwox, \measurey) -- ++(0.6 cm,0) node[pos=0.5, anchor=north, yshift=-0.1cm, align=center] {measure \\ instructions};
+			\end{tikzpicture}
+			\caption{Level~2}
+		\end{subfigure}
+	\end{figure}
 \end{frame}
 
 \begin{frame}[t]{Findings}
