@@ -1,0 +1,2 @@
+obj-m += reclocking-analysis-mod.o
+reclocking-analysis-mod-objs := reclocking-analysis.o interrupt-entry.o

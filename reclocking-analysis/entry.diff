@@ -1,0 +1,11 @@
+diff --git a/arch/x86/entry/entry_64.S b/arch/x86/entry/entry_64.S
+index 1f0efdb7b629..39c2a5d9147e 100644
+--- a/arch/x86/entry/entry_64.S
++++ b/arch/x86/entry/entry_64.S
+@@ -1674,3 +1674,6 @@ ENTRY(rewind_stack_do_exit)
+ 
+ 	call	do_exit
+ END(rewind_stack_do_exit)
++
++EXPORT_SYMBOL(error_entry)
++EXPORT_SYMBOL(error_exit)
