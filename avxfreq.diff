@@ -1,0 +1,546 @@
+diff --git a/arch/x86/entry/syscalls/syscall_64.tbl b/arch/x86/entry/syscalls/syscall_64.tbl
+index 92ee0b4378d4..f60367139726 100644
+--- a/arch/x86/entry/syscalls/syscall_64.tbl
++++ b/arch/x86/entry/syscalls/syscall_64.tbl
+@@ -350,6 +350,10 @@
+ 426	common	io_uring_enter		__x64_sys_io_uring_enter
+ 427	common	io_uring_register	__x64_sys_io_uring_register
+ 
++428 common avxfreq_is_enabled		__x64_sys_avxfreq_is_enabled
++429 common avxfreq_set_reclocking	__x64_sys_avxfreq_set_reclocking
++430 common avxfreq_set_license		__x64_sys_avxfreq_set_license
++
+ #
+ # x32-specific system call numbers start at 512 to avoid cache impact
+ # for native 64-bit operation. The __x32_compat_sys stubs are created
+diff --git a/arch/x86/include/asm/cpu.h b/arch/x86/include/asm/cpu.h
+index adc6cc86b062..df0a22079f9a 100644
+--- a/arch/x86/include/asm/cpu.h
++++ b/arch/x86/include/asm/cpu.h
+@@ -40,4 +40,22 @@ int mwait_usable(const struct cpuinfo_x86 *);
+ unsigned int x86_family(unsigned int sig);
+ unsigned int x86_model(unsigned int sig);
+ unsigned int x86_stepping(unsigned int sig);
++
++typedef struct {
++	u64 cycles;
++	u64 fp256_sp_retired;
++	u64 fp256_dp_retired;
++	u64 fp512_sp_retired;
++	u64 fp512_dp_retired;
++} avxfreq_counters;
++
++typedef void (*avxfreq_license_transition_listener)(u8 from, u8 to);
++
++extern bool avxfreq_is_enabled(void);
++extern avxfreq_counters *avxfreq_get_counters(int cpu);
++extern void avxfreq_reset_cycle_counter(void);
++extern void avxfreq_set_license_transition_listener(avxfreq_license_transition_listener listener);
++
++#define AVXFREQ_PMCS 2
++
+ #endif /* _ASM_X86_CPU_H */
+diff --git a/drivers/cpufreq/intel_pstate.c b/drivers/cpufreq/intel_pstate.c
+index eb023126132f..3a833099fafd 100644
+--- a/drivers/cpufreq/intel_pstate.c
++++ b/drivers/cpufreq/intel_pstate.c
+@@ -28,6 +28,7 @@
+ #include <linux/fs.h>
+ #include <linux/acpi.h>
+ #include <linux/vmalloc.h>
++#include <linux/syscalls.h>
+ #include <trace/events/power.h>
+ 
+ #include <asm/div64.h>
+@@ -35,12 +36,96 @@
+ #include <asm/cpu_device_id.h>
+ #include <asm/cpufeature.h>
+ #include <asm/intel-family.h>
++#include <asm/nmi.h>
++#include <asm/cpu.h>
+ 
+ #define INTEL_PSTATE_SAMPLING_INTERVAL	(10 * NSEC_PER_MSEC)
+ 
+ #define INTEL_CPUFREQ_TRANSITION_LATENCY	20000
+ #define INTEL_CPUFREQ_TRANSITION_DELAY		500
+ 
++/* copied from arch/x86/events/perf_event.h (not within include path) */
++union x86_pmu_config {
++	struct {
++		u64 event:8,
++		umask:8,
++		usr:1,
++		os:1,
++		edge:1,
++		pc:1,
++		interrupt:1,
++		__reserved1:1,
++		en:1,
++		inv:1,
++		cmask:8,
++		event2:4,
++		__reserved2:4,
++		go:1,
++		ho:1;
++	} bits;
++	u64 value;
++};
++
++#define MSR_PMC_SEL_0 0x186
++#define MSR_PMC_SEL_1 (MSR_PMC_SEL_0 + 1)
++#define MSR_PMC_SEL_2 (MSR_PMC_SEL_0 + 2)
++#define MSR_PMC_SEL_3 (MSR_PMC_SEL_0 + 3)
++#define MSR_PMC_SEL_4 (MSR_PMC_SEL_0 + 4)
++#define MSR_PMC_SEL_5 (MSR_PMC_SEL_0 + 5)
++#define MSR_PMC_SEL_6 (MSR_PMC_SEL_0 + 6)
++#define MSR_PMC_SEL_7 (MSR_PMC_SEL_0 + 7)
++#define MSR_PMC_0 0xc1
++#define MSR_PMC_1 (MSR_PMC_0 + 1)
++#define MSR_PMC_2 (MSR_PMC_0 + 2)
++#define MSR_PMC_3 (MSR_PMC_0 + 3)
++#define MSR_PMC_4 (MSR_PMC_0 + 4)
++#define MSR_PMC_5 (MSR_PMC_0 + 5)
++#define MSR_PMC_6 (MSR_PMC_0 + 6)
++#define MSR_PMC_7 (MSR_PMC_0 + 7)
++
++#define PMC_MAX 0x0000ffffffffffffull
++
++#define AVXFREQ_LICENSE_LVL1_PSTATE_OFFSET 9
++#define AVXFREQ_LICENSE_LVL2_PSTATE_OFFSET 15
++
++union perf_global_status {
++	struct {
++		struct {
++			unsigned char pmc0:1;
++			unsigned char pmc1:1;
++			unsigned char pmc2:1;
++			unsigned char pmc3:1;
++			unsigned char pmc4:1;
++			unsigned char pmc5:1;
++			unsigned char pmc6:1;
++			unsigned char pmc7:1;
++		} overflow;
++		unsigned char reserved[3];
++		struct {
++			unsigned char ctr0:1;
++			unsigned char ctr1:1;
++			unsigned char ctr2:1;
++			unsigned char reserved:5;
++		} fixed_overflow;
++		unsigned char reserved2;
++		unsigned char perf_metric_overflow:1;
++		unsigned char reserved3:6;
++		unsigned char trace_topa_pmi:1;
++		unsigned char reserved4:2;
++		unsigned char lbr_frozen:1;
++		unsigned char counters_frozen:1;
++		unsigned char contains_secure_enclave:1;
++		unsigned char uncore_overflow:1;
++		unsigned char ds_save_overflow:1;
++		unsigned char conditions_changed:1;
++	} bits;
++	u64 value;
++};
++
++struct cpudata;
++typedef int (*avxfreq_interrupt_function)(struct cpudata *cpu, union perf_global_status perf_status);
++typedef enum hrtimer_restart (*avxfreq_timer_function)(struct cpudata *cpu, union perf_global_status perf_status);
++
+ #ifdef CONFIG_ACPI
+ #include <acpi/processor.h>
+ #include <acpi/cppc_acpi.h>
+@@ -143,6 +228,7 @@ struct sample {
+  */
+ struct pstate_data {
+ 	int	current_pstate;
++	u8	current_license;
+ 	int	min_pstate;
+ 	int	max_pstate;
+ 	int	max_pstate_physical;
+@@ -265,6 +351,13 @@ struct cpudata {
+ 	u64 last_io_update;
+ 	unsigned int sched_flags;
+ 	u32 hwp_boost_min;
++
++	u8 avxfreq_license;
++	u16 avxfreq_upclock_us_elapsed;
++	struct hrtimer avxfreq_timer;
++	avxfreq_interrupt_function avxfreq_next_interrupt_handler;
++	avxfreq_timer_function avxfreq_next_timer_handler;
++	avxfreq_counters avxfreq_counters;
+ };
+ 
+ static struct cpudata **all_cpu_data;
+@@ -299,6 +392,9 @@ static int hwp_active __read_mostly;
+ static int hwp_mode_bdw __read_mostly;
+ static bool per_cpu_limits __read_mostly;
+ static bool hwp_boost __read_mostly;
++static bool avxfreq __read_mostly;
++static bool avxfreq_reclocking __read_mostly = 1;
++static avxfreq_license_transition_listener avxfreq_listener __read_mostly = NULL;
+ 
+ static struct cpufreq_driver *intel_pstate_driver __read_mostly;
+ 
+@@ -1147,6 +1243,11 @@ static ssize_t store_hwp_dynamic_boost(struct kobject *a,
+ 	return count;
+ }
+ 
++static ssize_t show_avxfreq_enabled(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
++{
++	return sprintf(buf, "%u\n", avxfreq);
++}
++
+ show_one(max_perf_pct, max_perf_pct);
+ show_one(min_perf_pct, min_perf_pct);
+ 
+@@ -1157,12 +1258,14 @@ define_one_global_rw(min_perf_pct);
+ define_one_global_ro(turbo_pct);
+ define_one_global_ro(num_pstates);
+ define_one_global_rw(hwp_dynamic_boost);
++define_one_global_ro(avxfreq_enabled);
+ 
+ static struct attribute *intel_pstate_attributes[] = {
+ 	&status.attr,
+ 	&no_turbo.attr,
+ 	&turbo_pct.attr,
+ 	&num_pstates.attr,
++	&avxfreq_enabled.attr,
+ 	NULL
+ };
+ 
+@@ -1729,10 +1832,24 @@ static int intel_pstate_prepare_request(struct cpudata *cpu, int pstate)
+ 
+ static void intel_pstate_update_pstate(struct cpudata *cpu, int pstate)
+ {
+-	if (pstate == cpu->pstate.current_pstate)
++	if (pstate == cpu->pstate.current_pstate && cpu->avxfreq_license == cpu->pstate.current_license)
+ 		return;
+ 
+ 	cpu->pstate.current_pstate = pstate;
++	cpu->pstate.current_license = cpu->avxfreq_license;
++
++	switch(cpu->avxfreq_license) {
++		case 1:
++			pstate -= AVXFREQ_LICENSE_LVL1_PSTATE_OFFSET;
++			break;
++		case 2:
++			pstate -= AVXFREQ_LICENSE_LVL2_PSTATE_OFFSET;
++			break;
++	}
++
++	if(pstate < cpu->pstate.min_pstate)
++		pstate = cpu->pstate.min_pstate;
++
+ 	wrmsrl(MSR_IA32_PERF_CTL, pstate_funcs.get_val(cpu, pstate));
+ }
+ 
+@@ -2602,6 +2719,247 @@ static const struct x86_cpu_id hwp_support_ids[] __initconst = {
+ 	{}
+ };
+ 
++static void avxfreq_reset_pmu(void *unused)
++{
++	union x86_pmu_config pmc0, pmc1;
++
++	/* FP_ARITH_INST_RETIRED.256B_PACKED_DOUBLE >= 1 */
++	pmc0.bits.event = 0xc7;
++	pmc0.bits.umask = 0x10;
++	pmc0.bits.usr = 1;
++	pmc0.bits.os = 1;
++	pmc0.bits.interrupt = 1;
++	pmc0.bits.en = 1;
++
++	/* FP_ARITH_INST_RETIRED.512B_PACKED_DOUBLE >= 1 */
++	pmc1.bits.event = 0xc7;
++	pmc1.bits.umask = 0x40;
++	pmc1.bits.usr = 1;
++	pmc1.bits.os = 1;
++	pmc1.bits.interrupt = 1;
++	pmc1.bits.en = 1;
++
++	wrmsrl(MSR_PMC_SEL_0, pmc0.value);
++	wrmsrl(MSR_PMC_SEL_1, pmc1.value);
++	wrmsrl(MSR_PMC_0, ULONG_MAX);
++	wrmsrl(MSR_PMC_1, ULONG_MAX);
++	wrmsrl(MSR_CORE_PERF_FIXED_CTR_CTRL, (1 << 0) | (1 << 1) | (1 << 4) | (1 << 5) | (1 << 8) | (1 << 9)); /* INST_RETIRED OS+USR; CPU_CLK_UNHALTED.CORE OS+USR; CPU_CLK_UNHALTED.REF_TSC OS+USR */
++}
++
++static void avxfreq_disable_pmu(void *unused)
++{
++	wrmsrl(MSR_PMC_SEL_0, 0);
++	wrmsrl(MSR_PMC_SEL_1, 0);
++	wrmsrl(MSR_PMC_0, 0);
++	wrmsrl(MSR_PMC_1, 0);
++	wrmsrl(MSR_CORE_PERF_FIXED_CTR_CTRL, 0);
++}
++
++#define AVXFREQ_LICENSE_TRANSITION_BEGIN(cpu) { \
++	u8 orig_license = cpu->avxfreq_license;
++
++#define AVXFREQ_LICENSE_TRANSITION_END(cpu) \
++	if (orig_license != cpu->avxfreq_license) { \
++		pr_info("AVXFreq: switch from lvl%i to lvl%i on cpu %i\n", orig_license, cpu->avxfreq_license, cpu->cpu); \
++		intel_pstate_adjust_pstate(cpu); \
++		if (avxfreq_listener != NULL) { \
++			avxfreq_listener(orig_license, cpu->avxfreq_license); \
++			memset(&(cpu->avxfreq_counters), 0, sizeof(cpu->avxfreq_counters)); \
++		} \
++ \
++		if (cpu->avxfreq_license == 0 && avxfreq_reclocking) { \
++			avxfreq_reset_pmu(NULL); \
++		} \
++	} \
++}
++
++static enum hrtimer_restart avxfreq_upclock_timer(struct cpudata *cpu, union perf_global_status perf_status) {
++	unsigned long fp512_dp_retired = native_read_msr(MSR_PMC_1); /* FP_ARITH_INST_RETIRED.512B_PACKED_DOUBLE */
++	unsigned long cycles = native_read_msr(MSR_CORE_PERF_FIXED_CTR1);
++
++	wrmsrl(MSR_CORE_PERF_FIXED_CTR1, 0);
++
++	cpu->avxfreq_counters.fp512_dp_retired += fp512_dp_retired;
++	cpu->avxfreq_counters.cycles += cycles;
++
++	pr_info("AVXFreq: upclock_timer() elapsed=%u fp512_dp_retired=%lu cycles=%lu pstate=%i\n", cpu->avxfreq_upclock_us_elapsed, fp512_dp_retired, cycles, cpu->pstate.current_pstate);
++
++	if (fp512_dp_retired > 0) {
++		wrmsrl(MSR_PMC_1, 0);
++		cpu->avxfreq_upclock_us_elapsed = 0;
++
++		if (cpu->avxfreq_license == 1 && fp512_dp_retired >= cycles) {
++			/*
++			 * fp512_dp_retired >= cycles equals a throughput of at least one FP512 op per cycle
++			 * we don't calculate the throughput (i.e., fp512_dp_retired / cycles) to avoid executing floating-point operations within the kernel
++			 */
++			cpu->avxfreq_license = 2;
++		}
++
++		hrtimer_forward_now(&cpu->avxfreq_timer, 100 * NSEC_PER_USEC);
++		return HRTIMER_RESTART;
++	} else if (cpu->avxfreq_upclock_us_elapsed < 600) {
++		cpu->avxfreq_upclock_us_elapsed += 100;
++		if (cpu->avxfreq_upclock_us_elapsed == 600) {
++			hrtimer_forward_now(&cpu->avxfreq_timer, 66 * NSEC_PER_USEC);
++		} else {
++			hrtimer_forward_now(&cpu->avxfreq_timer, 100 * NSEC_PER_USEC);
++		}
++
++		return HRTIMER_RESTART;
++	} else {
++		/* 2/3 ms elapsed */
++		cpu->avxfreq_upclock_us_elapsed = 0;
++		cpu->avxfreq_license = 0;
++		return HRTIMER_NORESTART;
++	}
++}
++
++static enum hrtimer_restart avxfreq_timer(struct hrtimer *timer) {
++	struct cpudata *cpu = all_cpu_data[smp_processor_id()];
++	union perf_global_status perf_status;
++	enum hrtimer_restart ret;
++
++	AVXFREQ_LICENSE_TRANSITION_BEGIN(cpu)
++		perf_status.value = native_read_msr(MSR_CORE_PERF_GLOBAL_STATUS);
++		ret = cpu->avxfreq_next_timer_handler(cpu, perf_status);
++	AVXFREQ_LICENSE_TRANSITION_END(cpu)
++
++	return ret;
++}
++
++static int avxfreq_interrupt_initial(struct cpudata *cpu, union perf_global_status perf_status) {
++	union x86_pmu_config pmc1;
++	int handled = 0;
++
++	if (perf_status.bits.overflow.pmc1) {
++		cpu->avxfreq_license = 1;
++
++		cpu->avxfreq_counters.fp512_dp_retired += native_read_msr(MSR_PMC_1) + 1;
++		cpu->avxfreq_counters.cycles += native_read_msr(MSR_CORE_PERF_FIXED_CTR1);
++
++		wrmsrl(MSR_PMC_1, 0);
++		wrmsrl(MSR_CORE_PERF_FIXED_CTR1, 0);
++
++		/* FP_ARITH_INST_RETIRED.512B_PACKED_DOUBLE >= 1 */
++		pmc1.bits.event = 0xc7;
++		pmc1.bits.umask = 0x40;
++		pmc1.bits.usr = 1;
++		pmc1.bits.os = 1;
++		pmc1.bits.interrupt = 0;
++		pmc1.bits.en = 1;
++		wrmsrl(MSR_PMC_SEL_1, pmc1.value);
++
++		wrmsrl(MSR_CORE_PERF_GLOBAL_OVF_CTRL, 1 << 1);
++
++		cpu->avxfreq_next_timer_handler = avxfreq_upclock_timer;
++		hrtimer_start(&cpu->avxfreq_timer, 100 * NSEC_PER_USEC, HRTIMER_MODE_REL_PINNED);
++
++		handled++;
++	}
++
++	if (perf_status.bits.overflow.pmc0) {
++		/* TODO */
++		handled++;
++	}
++
++	return handled;
++}
++
++static int avxfreq_interrupt(unsigned int type, struct pt_regs *regs)
++{
++	union perf_global_status perf_status;
++	int handled;
++	struct cpudata *cpu = all_cpu_data[smp_processor_id()];
++
++	AVXFREQ_LICENSE_TRANSITION_BEGIN(cpu)
++		perf_status.value = native_read_msr(MSR_CORE_PERF_GLOBAL_STATUS);
++		handled = cpu->avxfreq_next_interrupt_handler(cpu, perf_status);
++	AVXFREQ_LICENSE_TRANSITION_END(cpu)
++
++	apic_write(APIC_LVTPC, APIC_DM_NMI);
++	return handled;
++}
++
++static void avxfreq_init_cpu(void *info)
++{
++	struct cpudata *cpu = all_cpu_data[smp_processor_id()];
++
++	hrtimer_init(&cpu->avxfreq_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
++	cpu->avxfreq_timer.function = avxfreq_timer;
++	cpu->avxfreq_next_interrupt_handler = avxfreq_interrupt_initial;
++
++	avxfreq_reset_pmu(NULL);
++}
++
++static void avxfreq_init(void)
++{
++	/* registered in arch/x86/events/core.c, note that we're essentially killing parts of the perf subsystem here */
++	unregister_nmi_handler(NMI_LOCAL, "PMI");
++	register_nmi_handler(NMI_LOCAL, avxfreq_interrupt, NMI_FLAG_FIRST, "avxfreq");
++	/* we don't need to set APIC_LVTPC here as the Intel PMU driver already did that for us */
++
++	on_each_cpu(avxfreq_init_cpu, NULL, 0);
++}
++
++bool avxfreq_is_enabled(void)
++{
++	return avxfreq;
++}
++
++avxfreq_counters *avxfreq_get_counters(int cpu) {
++	struct cpudata *data = all_cpu_data[cpu];
++
++	return &data->avxfreq_counters;
++}
++
++void avxfreq_set_license_transition_listener(avxfreq_license_transition_listener listener)
++{
++	avxfreq_listener = listener;
++}
++
++void avxfreq_reset_cycle_counter(void)
++{
++	struct cpudata *cpu = all_cpu_data[smp_processor_id()];
++
++	cpu->avxfreq_counters.cycles = 0;
++	wrmsrl(MSR_CORE_PERF_FIXED_CTR1, 0);
++}
++
++SYSCALL_DEFINE0(avxfreq_is_enabled)
++{
++	return avxfreq;
++}
++
++SYSCALL_DEFINE1(avxfreq_set_reclocking, bool, reclock)
++{
++	if (!avxfreq)
++		return -ENODEV;
++
++	if (reclock)
++		on_each_cpu(avxfreq_reset_pmu, NULL, 0);
++	else
++		on_each_cpu(avxfreq_disable_pmu, NULL, 0);
++
++	avxfreq_reclocking = reclock;
++
++	return 0;
++}
++
++SYSCALL_DEFINE1(avxfreq_set_license, unsigned char, license)
++{
++	struct cpudata *cpu = all_cpu_data[smp_processor_id()];
++
++	if (license > 2)
++		return -EINVAL;
++
++	AVXFREQ_LICENSE_TRANSITION_BEGIN(cpu)
++		cpu->avxfreq_license = license;
++	AVXFREQ_LICENSE_TRANSITION_END(cpu)
++
++	return 0;
++}
++
+ static int __init intel_pstate_init(void)
+ {
+ 	const struct x86_cpu_id *id;
+@@ -2669,6 +3027,11 @@ static int __init intel_pstate_init(void)
+ 	if (hwp_active)
+ 		pr_info("HWP enabled\n");
+ 
++	if (avxfreq) {
++		pr_info("AVXFreq enabled\n");
++		avxfreq_init();
++	}
++
+ 	return 0;
+ }
+ device_initcall(intel_pstate_init);
+@@ -2695,6 +3058,11 @@ static int __init intel_pstate_setup(char *str)
+ 		hwp_only = 1;
+ 	if (!strcmp(str, "per_cpu_perf_limits"))
+ 		per_cpu_limits = true;
++	if (!strcmp(str, "avxfreq")) {
++		avxfreq = true;
++		no_hwp = 1;
++		hwp_only = 0;
++	}
+ 
+ #ifdef CONFIG_ACPI
+ 	if (!strcmp(str, "support_acpi_ppc"))
+@@ -2705,6 +3073,11 @@ static int __init intel_pstate_setup(char *str)
+ }
+ early_param("intel_pstate", intel_pstate_setup);
+ 
++EXPORT_SYMBOL(avxfreq_is_enabled);
++EXPORT_SYMBOL(avxfreq_get_counters);
++EXPORT_SYMBOL(avxfreq_reset_cycle_counter);
++EXPORT_SYMBOL(avxfreq_set_license_transition_listener);
++
+ MODULE_AUTHOR("Dirk Brandewie <dirk.j.brandewie@intel.com>");
+ MODULE_DESCRIPTION("'intel_pstate' - P state driver Intel Core processors");
+ MODULE_LICENSE("GPL");
+diff --git a/include/linux/syscalls.h b/include/linux/syscalls.h
+index e446806a561f..ac2c5dad19d0 100644
+--- a/include/linux/syscalls.h
++++ b/include/linux/syscalls.h
+@@ -1203,6 +1203,9 @@ asmlinkage long sys_mmap_pgoff(unsigned long addr, unsigned long len,
+ 			unsigned long fd, unsigned long pgoff);
+ asmlinkage long sys_old_mmap(struct mmap_arg_struct __user *arg);
+ 
++asmlinkage long sys_avxfreq_is_enabled(void);
++asmlinkage long sys_avxfreq_set_reclocking(bool enable);
++asmlinkage long sys_avxfreq_set_license(unsigned char license);
+ 
+ /*
+  * Not a real system call, but a placeholder for syscalls which are
+diff --git a/kernel/sys_ni.c b/kernel/sys_ni.c
+index d21f4befaea4..187cd06cebc5 100644
+--- a/kernel/sys_ni.c
++++ b/kernel/sys_ni.c
+@@ -450,3 +450,7 @@ COND_SYSCALL(setuid16);
+ 
+ /* restartable sequence */
+ COND_SYSCALL(rseq);
++
++COND_SYSCALL(avxfreq_is_enabled);
++COND_SYSCALL(avxfreq_set_reclocking);
++COND_SYSCALL(avxfreq_set_license);
